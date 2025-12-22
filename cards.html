@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>البطاقات</title>
+
+<style>
+body{
+  font-family:Arial;
+  background:#f2f2f2;
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+}
+
+.card{
+  width:260px;
+  height:170px;
+  perspective:1000px;
+  cursor:pointer;
+}
+
+.card-inner{
+  width:100%;
+  height:100%;
+  position:relative;
+  transition:transform 0.6s;
+  transform-style:preserve-3d;
+}
+
+.card.flip .card-inner{
+  transform:rotateY(180deg);
+}
+
+.card-face{
+  position:absolute;
+  width:100%;
+  height:100%;
+  backface-visibility:hidden;
+  border-radius:18px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  font-size:24px;
+  color:white;
+}
+
+.front{ background:#4da6ff; }
+.back{
+  background:#2ecc71;
+  transform:rotateY(180deg);
+}
+
+button{
+  margin:5px;
+  padding:8px 14px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.controls{ margin-top:20px; }
+</style>
+</head>
+
+<body>
+
+<h3 id="progress"></h3>
+
+<div class="card" id="card" onclick="flipCard()">
+  <div class="card-inner">
+    <div class="card-face front" id="front"></div>
+    <div class="card-face back">
+      <div id="back"></div>
+      <button onclick="playSound(event)">🔊</button>
+      <button onclick="startPronunciation(event)">🎤</button>
+      <div id="result"></div>
+    </div>
+  </div>
+</div>
+
+<div class="controls">
+  <button onclick="prevCard()">⬅️</button>
+  <button onclick="nextCard()">➡️</button>
+</div>
+
+<h4 id="average"></h4>
+
+<script>
+const student = "student1"; // MVP
+let units = JSON.parse(localStorage.getItem("units")) || [];
+let unitIndex = localStorage.getItem("currentUnit");
+let cards = units[unitIndex].cards;
+
+let index = 0;
+let audio;
+
+const front = document.getElementById("front");
+const back = document.getElementById("back");
+const cardDiv = document.getElementById("card");
+const resultDiv = document.getElementById("result");
+const progress = document.getElementById("progress");
+const avgDiv = document.getElementById("average");
+
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const recognition = new SpeechRecognition();
+recognition.lang = "en-US";
+
+function loadCard(){
+  cardDiv.classList.remove("flip");
+  front.textContent = cards[index].arabic;
+  back.textContent = cards[index].english;
+  audio = new Audio(cards[index].audio);
+  resultDiv.textContent = "";
+  progress.textContent = `(${index+1} / ${cards.length})`;
+  showAverage();
+}
+
+function flipCard(){
+  cardDiv.classList.toggle("flip");
+}
+
+function nextCard(){
+  index = (index+1) % cards.length;
+  loadCard();
+}
+
+function prevCard(){
+  index = (index-1+cards.length) % cards.length;
+  loadCard();
+}
+
+function playSound(e){
+  e.stopPropagation();
+  audio.play();
+}
+
+function calculateAccuracy(spoken, correct){
+  let match = 0;
+  for(let i=0;i<correct.length;i++){
+    if(spoken[i] === correct[i]) match++;
+  }
+  let acc = Math.round((match / correct.length) * 100);
+  return acc;
+}
+
+function getGrade(acc){
+  if(acc >= 90) return "Excellent ⭐";
+  if(acc >= 75) return "Good 👍";
+  return "Poor ❌";
+}
+
+function startPronunciation(e){
+  e.stopPropagation();
+  resultDiv.textContent = "🎙️ اسمعك...";
+  recognition.start();
+
+  recognition.onresult = (event)=>{
+    const spoken = event.results[0][0].transcript.toLowerCase().trim();
+    const correct = cards[index].english.toLowerCase();
+    const acc = calculateAccuracy(spoken, correct);
+    const grade = getGrade(acc);
+
+    cards[index].results[student] = { accuracy: acc, grade };
+    localStorage.setItem("units", JSON.stringify(units));
+
+    resultDiv.innerHTML =
+      `قلت: "${spoken}"<br>
+       الصحة: ${acc}%<br>
+       التقييم: ${grade}`;
+    showAverage();
+  };
+}
+
+function showAverage(){
+  let total = 0, count = 0;
+  units.forEach(u=>{
+    u.cards.forEach(c=>{
+      if(c.results[student]){
+        total += c.results[student].accuracy;
+        count++;
+      }
+    });
+  });
+  avgDiv.textContent = count
+    ? `📊 متوسط أدائك: ${Math.round(total/count)}%`
+    : "";
+}
+
+loadCard();
+</script>
+
+</body>
+</html>

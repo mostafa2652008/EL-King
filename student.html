@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>الوحدات</title>
+
+<style>
+body{
+  font-family:Arial;
+  background:#f2f2f2;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:30px;
+}
+
+button{
+  width:200px;
+  padding:15px;
+  margin:10px;
+  font-size:18px;
+  border:none;
+  border-radius:10px;
+  background:#4da6ff;
+  color:white;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<h2>📚 اختر الوحدة</h2>
+<div id="units"></div>
+
+<script>
+const units = JSON.parse(localStorage.getItem("units")) || [];
+const container = document.getElementById("units");
+
+units.forEach((u,i)=>{
+  const btn = document.createElement("button");
+  btn.textContent = u.unitName;
+  btn.onclick = ()=>{
+    localStorage.setItem("currentUnit", i);
+    location.href = "cards.html";
+  };
+  container.appendChild(btn);
+});
+</script>
+<a href="index.html">student</a>
+</body>
+</html>

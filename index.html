@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>لوحة المدرس</title>
+
+<style>
+body{
+  font-family:Arial;
+  background:#f2f2f2;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+
+.box{
+  background:white;
+  padding:20px;
+  width:340px;
+  border-radius:15px;
+  box-shadow:0 0 15px rgba(0,0,0,0.1);
+}
+
+input{
+  width:100%;
+  padding:10px;
+  margin:6px 0;
+  border-radius:8px;
+  border:1px solid #ccc;
+}
+
+button{
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  background:#4da6ff;
+  color:white;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+  <h3>👨‍🏫 إضافة بطاقة</h3>
+
+  <input id="unitName" placeholder="اسم الـ Unit">
+  <input id="arabic" placeholder="الكلمة بالعربي">
+  <input id="english" placeholder="الكلمة بالإنجليزي">
+  <input type="file" id="audio" accept="audio/*">
+
+  <button onclick="addCard()">➕ إضافة البطاقة</button>
+</div>
+
+<script>
+let audioBase64 = "";
+
+document.getElementById("audio").onchange = function(){
+  const reader = new FileReader();
+  reader.onload = () => audioBase64 = reader.result;
+  reader.readAsDataURL(this.files[0]);
+};
+
+function addCard(){
+  const unitName = document.getElementById("unitName").value;
+  const arabic = document.getElementById("arabic").value;
+  const english = document.getElementById("english").value;
+
+  if(!unitName || !arabic || !english || !audioBase64){
+    alert("⚠️ كمل كل البيانات");
+    return;
+  }
+
+  let units = JSON.parse(localStorage.getItem("units")) || [];
+
+  let unit = units.find(u => u.unitName === unitName);
+  if(!unit){
+    unit = { unitName, cards: [] };
+    units.push(unit);
+  }
+
+  unit.cards.push({
+    arabic,
+    english,
+    audio: audioBase64,
+    results: {}
+  });
+
+  localStorage.setItem("units", JSON.stringify(units));
+  alert("✅ تم إضافة البطاقة");
+}
+</script>
+<a href="student.html">student</a>
+</body>
+</html>
