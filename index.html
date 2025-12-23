@@ -1,99 +1,273 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<title>لوحة المدرس</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة المدرس</title>
 
-<style>
-body{
-  font-family:Arial;
-  background:#f2f2f2;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  height:100vh;
-}
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
 
-.box{
-  background:white;
-  padding:20px;
-  width:340px;
-  border-radius:15px;
-  box-shadow:0 0 15px rgba(0,0,0,0.1);
-}
+  <style>
+    body {
+      font-family: 'Tajawal', sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+    }
 
-input{
-  width:100%;
-  padding:10px;
-  margin:6px 0;
-  border-radius:8px;
-  border:1px solid #ccc;
-}
+    /* ==== الـ Sidebar الجانبي ==== */
+    .sidebar {
+      width: 280px;
+      background: white;
+      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      right: 0;
+      overflow-y: auto;
+      z-index: 100;
+    }
 
-button{
-  width:100%;
-  padding:10px;
-  margin-top:10px;
-  background:#4da6ff;
-  color:white;
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
-}
-</style>
+    .sidebar-header {
+      background: #D32F2F;
+      color: white;
+      padding: 30px 20px;
+      text-align: center;
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .sidebar-menu {
+      padding: 20px 0;
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      padding: 18px 30px;
+      color: #555;
+      text-decoration: none;
+      font-size: 18px;
+      transition: all 0.3s;
+    }
+
+    .menu-item:hover {
+      background: #f0f0f0;
+      color: #D32F2F;
+    }
+
+    .menu-item.active {
+      background: #D32F2F;
+      color: white;
+      font-weight: 700;
+    }
+
+    .menu-item.active:hover {
+      background: #b71c1c;
+    }
+
+    .menu-icon {
+      font-size: 28px;
+      margin-left: 16px;
+    }
+
+    /* ==== المحتوى الرئيسي ==== */
+    .main-content {
+      flex: 1;
+      padding: 30px;
+      margin-right: 280px; /* مساحة للـ sidebar */
+      box-sizing: border-box;
+    }
+
+    .box {
+      background: white;
+      width: 100%;
+      max-width: 500px;
+      margin: 0 auto;
+      border-radius: 20px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    .header {
+      background: #D32F2F;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .content {
+      padding: 24px;
+    }
+
+    .input-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 15px;
+      color: #333;
+      font-weight: 500;
+    }
+
+    input[type="text"],
+    input[type="file"] {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px solid #ddd;
+      background: #fafafa;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+
+    input[type="file"] {
+      padding: 12px;
+      cursor: pointer;
+    }
+
+    button {
+      width: 100%;
+      padding: 16px;
+      margin-top: 20px;
+      background: #D32F2F;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #b71c1c;
+    }
+
+    /* للشاشات الصغيرة (موبايل) */
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        box-shadow: none;
+      }
+      .main-content {
+        margin-right: 0;
+        padding: 20px;
+      }
+      body {
+        flex-direction: column;
+      }
+    }
+  </style>
 </head>
-
 <body>
 
-<div class="box">
-  <h3>👨‍🏫 إضافة بطاقة</h3>
+  <!-- Sidebar جانبي -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      📚 لوحة التحكم
+    </div>
+    <div class="sidebar-menu">
+      <a href="index.html" class="menu-item active">
+        <span class="menu-icon">👨‍🏫</span>
+        لوحة المدرس
+      </a>
+      <a href="student.html" class="menu-item">
+        <span class="menu-icon">👨‍🎓</span>
+        صفحة الطالب
+      </a>
+      <a href="cards.html" class="menu-item">
+        <span class="menu-icon">🃏</span>
+        عرض البطاقات
+      </a>
+    </div>
+  </div>
 
-  <input id="unitName" placeholder="اسم الـ Unit">
-  <input id="arabic" placeholder="الكلمة بالعربي">
-  <input id="english" placeholder="الكلمة بالإنجليزي">
-  <input type="file" id="audio" accept="audio/*">
+  <!-- المحتوى الرئيسي -->
+  <div class="main-content">
+    <div class="box">
+      <div class="header">
+        👨‍🏫 إضافة بطاقة جديدة
+      </div>
 
-  <button onclick="addCard()">➕ إضافة البطاقة</button>
-</div>
+      <div class="content">
+        <div class="input-group">
+          <label>اسم الـ Unit</label>
+          <input type="text" id="unitName" placeholder="مثال: Unit 1 - Greetings">
+        </div>
 
-<script>
-let audioBase64 = "";
+        <div class="input-group">
+          <label>الكلمة بالعربي</label>
+          <input type="text" id="arabic" placeholder="مثال: مرحبا">
+        </div>
 
-document.getElementById("audio").onchange = function(){
-  const reader = new FileReader();
-  reader.onload = () => audioBase64 = reader.result;
-  reader.readAsDataURL(this.files[0]);
-};
+        <div class="input-group">
+          <label>الكلمة بالإنجليزي</label>
+          <input type="text" id="english" placeholder="مثال: Hello">
+        </div>
 
-function addCard(){
-  const unitName = document.getElementById("unitName").value;
-  const arabic = document.getElementById("arabic").value;
-  const english = document.getElementById("english").value;
+        <div class="input-group">
+          <label>ملف الصوت</label>
+          <input type="file" id="audio" accept="audio/*">
+        </div>
 
-  if(!unitName || !arabic || !english || !audioBase64){
-    alert("⚠️ كمل كل البيانات");
-    return;
-  }
+        <button onclick="addCard()">➕ إضافة البطاقة</button>
+      </div>
+    </div>
+  </div>
 
-  let units = JSON.parse(localStorage.getItem("units")) || [];
+  <script>
+    let audioBase64 = "";
 
-  let unit = units.find(u => u.unitName === unitName);
-  if(!unit){
-    unit = { unitName, cards: [] };
-    units.push(unit);
-  }
+    document.getElementById("audio").onchange = function(){
+      const reader = new FileReader();
+      reader.onload = () => audioBase64 = reader.result;
+      reader.readAsDataURL(this.files[0]);
+    };
 
-  unit.cards.push({
-    arabic,
-    english,
-    audio: audioBase64,
-    results: {}
-  });
+    function addCard(){
+      const unitName = document.getElementById("unitName").value.trim();
+      const arabic = document.getElementById("arabic").value.trim();
+      const english = document.getElementById("english").value.trim();
 
-  localStorage.setItem("units", JSON.stringify(units));
-  alert("✅ تم إضافة البطاقة");
-}
-</script>
-<a href="student.html">student</a>
+      if(!unitName || !arabic || !english || !audioBase64){
+        alert("⚠️ كمل كل البيانات");
+        return;
+      }
+
+      let units = JSON.parse(localStorage.getItem("units")) || [];
+
+      let unit = units.find(u => u.unitName === unitName);
+      if(!unit){
+        unit = { unitName, cards: [] };
+        units.push(unit);
+      }
+
+      unit.cards.push({
+        arabic,
+        english,
+        audio: audioBase64,
+        results: {}
+      });
+
+      localStorage.setItem("units", JSON.stringify(units));
+      alert("✅ تم إضافة البطاقة بنجاح!");
+
+      document.getElementById("unitName").value = "";
+      document.getElementById("arabic").value = "";
+      document.getElementById("english").value = "";
+      document.getElementById("audio").value = "";
+      audioBase64 = "";
+    }
+  </script>
+
 </body>
 </html>
