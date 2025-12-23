@@ -17,7 +17,7 @@
       display: flex;
     }
 
-    /* ==== الـ Sidebar الجانبي ==== */
+    /* ==== الـ Sidebar ==== */
     .sidebar {
       width: 280px;
       background: white;
@@ -39,9 +39,7 @@
       font-weight: 700;
     }
 
-    .sidebar-menu {
-      padding: 20px 0;
-    }
+    .sidebar-menu { padding: 20px 0; }
 
     .menu-item {
       display: flex;
@@ -53,25 +51,12 @@
       transition: all 0.3s;
     }
 
-    .menu-item:hover {
-      background: #f0f0f0;
-      color: #D32F2F;
-    }
+    .menu-item:hover { background: #f0f0f0; color: #D32F2F; }
 
-    .menu-item.active {
-      background: #D32F2F;
-      color: white;
-      font-weight: 700;
-    }
+    .menu-item.active { background: #D32F2F; color: white; font-weight: 700; }
+    .menu-item.active:hover { background: #b71c1c; }
 
-    .menu-item.active:hover {
-      background: #b71c1c;
-    }
-
-    .menu-icon {
-      font-size: 28px;
-      margin-left: 16px;
-    }
+    .menu-icon { font-size: 28px; margin-left: 16px; }
 
     /* ==== المحتوى الرئيسي ==== */
     .main-content {
@@ -83,42 +68,43 @@
 
     .page-title {
       text-align: center;
-      font-size: 26px;
-      margin-bottom: 40px;
-      color: #333;
+      font-size: 28px;
+      font-weight: 700;
+      color: #D32F2F;
+      margin-bottom: 50px;
     }
 
     .units-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 24px;
-      max-width: 1200px;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 30px;
+      max-width: 1400px;
       margin: 0 auto;
     }
 
     .unit-card {
       background: white;
-      border-radius: 20px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      border-radius: 24px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
       overflow: hidden;
-      transition: transform 0.3s, box-shadow 0.3s;
+      transition: all 0.4s ease;
       cursor: pointer;
     }
 
     .unit-card:hover {
-      transform: translateY(-8px);
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+      transform: translateY(-12px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
     }
 
     .unit-card button {
       width: 100%;
-      padding: 30px;
-      font-size: 20px;
+      padding: 40px 20px;
+      font-size: 22px;
       font-weight: 700;
       background: #D32F2F;
       color: white;
       border: none;
-      border-radius: 20px;
+      border-radius: 24px;
       cursor: pointer;
       transition: background 0.3s;
     }
@@ -129,12 +115,21 @@
 
     .no-units {
       text-align: center;
-      font-size: 18px;
+      font-size: 20px;
       color: #777;
-      margin-top: 50px;
+      margin-top: 80px;
+      line-height: 1.8;
+      grid-column: 1 / -1;
     }
 
-    /* للشاشات الصغيرة */
+    /* Responsive تحسين كبير */
+    @media (max-width: 1024px) {
+      .units-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 24px;
+      }
+    }
+
     @media (max-width: 768px) {
       .sidebar {
         width: 100%;
@@ -144,13 +139,32 @@
       }
       .main-content {
         margin-right: 0;
-        padding: 20px;
+        padding: 30px 20px;
       }
       body {
         flex-direction: column;
       }
+      .page-title {
+        font-size: 24px;
+        margin-bottom: 40px;
+      }
       .units-grid {
         grid-template-columns: 1fr;
+        gap: 20px;
+      }
+      .unit-card button {
+        padding: 35px 20px;
+        font-size: 20px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .unit-card button {
+        padding: 30px 15px;
+        font-size: 19px;
+      }
+      .page-title {
+        font-size: 22px;
       }
     }
   </style>
@@ -159,32 +173,24 @@
 
   <!-- Sidebar -->
   <div class="sidebar">
-    <div class="sidebar-header">
-      📚 لوحة التحكم
-    </div>
+    <div class="sidebar-header">📚 لوحة التحكم</div>
     <div class="sidebar-menu">
-      <a href="index.html" class="menu-item">
-        <span class="menu-icon">👨‍🏫</span>
-        لوحة المدرس
-      </a>
-      <a href="student.html" class="menu-item active">
-        <span class="menu-icon">👨‍🎓</span>
-        صفحة الطالب
-      </a>
-      <a href="cards.html" class="menu-item">
-        <span class="menu-icon">🃏</span>
-        عرض البطاقات
-      </a>
+      <a href="admin.html" class="menu-item"><span class="menu-icon">👨‍🏫</span> لوحة المدرس</a>
+      <a href="student.html" class="menu-item active"><span class="menu-icon">👨‍🎓</span> صفحة الطالب</a>
+      <a href="cards.html" class="menu-item"><span class="menu-icon">🃏</span> عرض البطاقات</a>
     </div>
   </div>
 
-  <!-- المحتوى الرئيسي -->
+  <!-- المحتوى -->
   <div class="main-content">
     <h1 class="page-title">📚 اختر الوحدة</h1>
 
     <div class="units-grid" id="units"></div>
 
-    <p class="no-units" id="noUnitsMsg" style="display:none;">لا توجد وحدات متاحة حالياً 😔<br>اطلب من المدرس إضافة وحدات جديدة</p>
+    <div class="no-units" id="noUnitsMsg" style="display:none;">
+      لا توجد وحدات متاحة حالياً 😔<br>
+      اطلب من المدرس إضافة وحدات جديدة
+    </div>
   </div>
 
   <script>
