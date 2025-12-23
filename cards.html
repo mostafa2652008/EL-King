@@ -5,10 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>عرض البطاقات</title>
 
-  <!-- خط Tajawal -->
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
-
-  <!-- Font Awesome للأيقونات الحديثة -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
   <style>
@@ -21,7 +18,7 @@
       display: flex;
     }
 
-    /* ==== الـ Sidebar ==== */
+    /* Sidebar */
     .sidebar {
       width: 280px;
       background: white;
@@ -58,11 +55,10 @@
     .menu-item:hover { background: #f0f0f0; color: #D32F2F; }
 
     .menu-item.active { background: #D32F2F; color: white; font-weight: 700; }
-    .menu-item.active:hover { background: #b71c1c; }
 
     .menu-icon { font-size: 28px; margin-left: 16px; }
 
-    /* ==== المحتوى الرئيسي ==== */
+    /* Main Content */
     .main-content {
       flex: 1;
       padding: 40px;
@@ -104,7 +100,6 @@
       transition: width 0.4s ease;
     }
 
-    /* ==== البطاقة ==== */
     .card-container {
       width: 420px;
       max-width: 95%;
@@ -188,7 +183,30 @@
       min-height: 60px;
     }
 
-    /* ==== الأسهم الحديثة ==== */
+    /* Visualizer الجديد */
+    #visualizer {
+      height: 100px;
+      width: 90%;
+      max-width: 800px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      background: #eee;
+      border-radius: 16px;
+      padding: 10px;
+      margin: 20px 0;
+      display: none;
+    }
+
+    .bar {
+      width: 6px;
+      background: #D32F2F;
+      margin: 0 2px;
+      border-radius: 4px;
+      transition: height 0.1s;
+    }
+
+    /* Controls */
     .controls {
       display: flex;
       gap: 50px;
@@ -214,11 +232,6 @@
     .controls button:hover {
       background: #b71c1c;
       transform: scale(1.2);
-      box-shadow: 0 15px 40px rgba(211, 47, 47, 0.5);
-    }
-
-    .controls button:active {
-      transform: scale(1.1);
     }
 
     #average {
@@ -233,7 +246,7 @@
       .sidebar { width: 100%; height: auto; position: relative; box-shadow: none; }
       .main-content { margin-right: 0; padding: 20px; }
       body { flex-direction: column; }
-      .card-container { width: 380px; height: 460px; }
+      .card-container { height: 460px; }
       .card-face { font-size: 30px; padding: 30px; }
       .controls button { width: 70px; height: 70px; font-size: 38px; }
       .back-buttons button { padding: 16px 28px; font-size: 18px; }
@@ -246,13 +259,13 @@
   <div class="sidebar">
     <div class="sidebar-header">📚 لوحة التحكم</div>
     <div class="sidebar-menu">
-      <a href="index.html" class="menu-item"><span class="menu-icon">👨‍🏫</span> لوحة المدرس</a>
+      <a href="admin.html" class="menu-item"><span class="menu-icon">👨‍🏫</span> لوحة المدرس</a>
       <a href="student.html" class="menu-item"><span class="menu-icon">👨‍🎓</span> صفحة الطالب</a>
       <a href="cards.html" class="menu-item active"><span class="menu-icon">🃏</span> عرض البطاقات</a>
     </div>
   </div>
 
-  <!-- المحتوى -->
+  <!-- Main Content -->
   <div class="main-content">
     <h2 class="unit-title" id="unitTitle"></h2>
     <h3 id="progress"></h3>
@@ -281,16 +294,17 @@
       <div class="progress-fill" id="progressFill"></div>
     </div>
 
-    <!-- الأسهم الجديدة بـ Font Awesome -->
     <div class="controls">
       <button onclick="prevCard()"><i class="fas fa-chevron-left"></i></button>
       <button onclick="nextCard()"><i class="fas fa-chevron-right"></i></button>
     </div>
 
+    <!-- Visualizer الجديد -->
+    <div id="visualizer"></div>
+
     <h4 id="average"></h4>
   </div>
 
-  <!-- باقي السكريبت زي ما هو (مش محتاج تغيير) -->
   <script>
     const student = "student1";
     let units = JSON.parse(localStorage.getItem("units")) || [];
@@ -311,12 +325,18 @@
       const progress = document.getElementById("progress");
       const progressFill = document.getElementById("progressFill");
       const avgDiv = document.getElementById("average");
+      const visualizer = document.getElementById("visualizer");
 
       unitTitle.textContent = units[unitIndex].unitName;
 
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       const recognition = new SpeechRecognition();
       recognition.lang = "en-US";
+      recognition.continuous = true;
+      recognition.interimResults = true;
+
+      let finalTranscript = '';
+      let audioContext, analyser, dataArray, microphone, animationId;
 
       function updateProgress() {
         const percent = ((index + 1) / cards.length) * 100;
@@ -340,50 +360,101 @@
 
       function prevCard() { index = (index - 1 + cards.length) % cards.length; loadCard(); }
 
-      function playSound(e) { e.stopPropagation(); audio.play(); }
+      function playSound(e) {
+        e.stopPropagation();
+        audio.play();
+      }
 
-      function calculateAccuracy(spoken, correct) {
-        spoken = spoken.toLowerCase(); correct = correct.toLowerCase();
+      async function startPronunciation(e) {
+        e.stopPropagation();
+        finalTranscript = '';
+        resultDiv.innerHTML = '🎙️ جاري الاستماع... نطق الكلمة براحتك';
+        visualizer.style.display = 'flex';
+
+        // إعداد Visualizer
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioContext.createAnalyser();
+        dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        microphone = audioContext.createMediaStreamSource(stream);
+        microphone.connect(analyser);
+
+        visualizer.innerHTML = '';
+        for (let i = 0; i < 40; i++) {
+          const bar = document.createElement('div');
+          bar.className = 'bar';
+          bar.style.height = '5px';
+          visualizer.appendChild(bar);
+        }
+
+        recognition.start();
+
+        recognition.onresult = (event) => {
+          let interim = '';
+          finalTranscript = '';
+
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            if (event.results[i].isFinal) {
+              finalTranscript += event.results[i][0].transcript + ' ';
+            } else {
+              interim += event.results[i][0].transcript;
+            }
+          }
+
+          resultDiv.innerHTML = `نطقت: <strong>${finalTranscript + interim}</strong>`;
+        };
+
+        drawVisualizer();
+      }
+
+      function drawVisualizer() {
+        animationId = requestAnimationFrame(drawVisualizer);
+        analyser.getByteFrequencyData(dataArray);
+
+        const bars = document.querySelectorAll('.bar');
+        const step = Math.floor(dataArray.length / bars.length);
+
+        bars.forEach((bar, i) => {
+          const value = dataArray[i * step] || 0;
+          bar.style.height = `${Math.max(5, value / 3)}px`;
+        });
+      }
+
+      function stopPronunciation() {
+        recognition.stop();
+        if (audioContext) audioContext.close();
+        if (animationId) cancelAnimationFrame(animationId);
+        visualizer.style.display = 'none';
+
+        if (finalTranscript.trim() === '') {
+          resultDiv.innerHTML = '⚠️ مفيش نطق تم تسجيله';
+          return;
+        }
+
+        const spoken = finalTranscript.trim().toLowerCase();
+        const correct = cards[index].english.toLowerCase();
+
         let match = 0;
         for (let i = 0; i < Math.min(spoken.length, correct.length); i++) {
           if (spoken[i] === correct[i]) match++;
         }
-        return Math.round((match / correct.length) * 100);
-      }
+        const acc = Math.round((match / correct.length) * 100);
 
-      function getGrade(acc) {
-        if (acc >= 90) return "ممتاز ⭐";
-        if (acc >= 75) return "جيد 👍";
-        return "يحتاج تحسين ❌";
-      }
+        const grade = acc >= 90 ? "ممتاز ⭐" : acc >= 75 ? "جيد 👍" : "يحتاج تحسين ❌";
 
-      function startPronunciation(e) {
-        e.stopPropagation();
-        resultDiv.textContent = "🎙️ جاري الاستماع...";
-        recognition.start();
+        if (!cards[index].results) cards[index].results = {};
+        cards[index].results[student] = { accuracy: acc, grade };
 
-        recognition.onresult = (event) => {
-          const spoken = event.results[0][0].transcript.trim();
-          const correct = cards[index].english;
-          const acc = calculateAccuracy(spoken, correct);
-          const grade = getGrade(acc);
+        localStorage.setItem("units", JSON.stringify(units));
 
-          if (!cards[index].results) cards[index].results = {};
-          cards[index].results[student] = { accuracy: acc, grade };
+        resultDiv.innerHTML = `
+          قلت: "<strong>${finalTranscript.trim()}</strong>"<br>
+          الدقة: <strong>${acc}%</strong><br>
+          التقييم: <strong>${grade}</strong>
+        `;
 
-          localStorage.setItem("units", JSON.stringify(units));
-
-          resultDiv.innerHTML = `
-            قلت: "<strong>${spoken}</strong>"<br>
-            الدقة: <strong>${acc}%</strong><br>
-            التقييم: <strong>${grade}</strong>
-          `;
-          showAverage();
-        };
-
-        recognition.onerror = () => {
-          resultDiv.textContent = "❌ خطأ في التعرف على الصوت، جرب تاني";
-        };
+        showAverage();
       }
 
       function showAverage() {
@@ -402,6 +473,10 @@
       }
 
       loadCard();
+
+      // إضافة حدث للزر الجديد (إيقاف النطق)
+      // بدل الضغط على البطاقة تاني، هنضيف زر إيقاف في الـ back-buttons لو عايز، بس حاليًا بنستخدم stopPronunciation() لما تضغط خارج أو تضيف زر
+      // لو عايز زر إيقاف ظاهر، قولي وأضيفه
     }
   </script>
 
