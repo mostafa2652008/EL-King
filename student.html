@@ -1,52 +1,217 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<title>الوحدات</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>صفحة الطالب</title>
 
-<style>
-body{
-  font-family:Arial;
-  background:#f2f2f2;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  padding:30px;
-}
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
 
-button{
-  width:200px;
-  padding:15px;
-  margin:10px;
-  font-size:18px;
-  border:none;
-  border-radius:10px;
-  background:#4da6ff;
-  color:white;
-  cursor:pointer;
-}
-</style>
+  <style>
+    body {
+      font-family: 'Tajawal', sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* ==== الـ Sidebar الجانبي ==== */
+    .sidebar {
+      width: 280px;
+      background: white;
+      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      right: 0;
+      overflow-y: auto;
+      z-index: 100;
+    }
+
+    .sidebar-header {
+      background: #D32F2F;
+      color: white;
+      padding: 30px 20px;
+      text-align: center;
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .sidebar-menu {
+      padding: 20px 0;
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      padding: 18px 30px;
+      color: #555;
+      text-decoration: none;
+      font-size: 18px;
+      transition: all 0.3s;
+    }
+
+    .menu-item:hover {
+      background: #f0f0f0;
+      color: #D32F2F;
+    }
+
+    .menu-item.active {
+      background: #D32F2F;
+      color: white;
+      font-weight: 700;
+    }
+
+    .menu-item.active:hover {
+      background: #b71c1c;
+    }
+
+    .menu-icon {
+      font-size: 28px;
+      margin-left: 16px;
+    }
+
+    /* ==== المحتوى الرئيسي ==== */
+    .main-content {
+      flex: 1;
+      padding: 40px 30px;
+      margin-right: 280px;
+      box-sizing: border-box;
+    }
+
+    .page-title {
+      text-align: center;
+      font-size: 26px;
+      margin-bottom: 40px;
+      color: #333;
+    }
+
+    .units-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .unit-card {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      transition: transform 0.3s, box-shadow 0.3s;
+      cursor: pointer;
+    }
+
+    .unit-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .unit-card button {
+      width: 100%;
+      padding: 30px;
+      font-size: 20px;
+      font-weight: 700;
+      background: #D32F2F;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .unit-card button:hover {
+      background: #b71c1c;
+    }
+
+    .no-units {
+      text-align: center;
+      font-size: 18px;
+      color: #777;
+      margin-top: 50px;
+    }
+
+    /* للشاشات الصغيرة */
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        box-shadow: none;
+      }
+      .main-content {
+        margin-right: 0;
+        padding: 20px;
+      }
+      body {
+        flex-direction: column;
+      }
+      .units-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
-
 <body>
 
-<h2>📚 اختر الوحدة</h2>
-<div id="units"></div>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      📚 لوحة التحكم
+    </div>
+    <div class="sidebar-menu">
+      <a href="index.html" class="menu-item">
+        <span class="menu-icon">👨‍🏫</span>
+        لوحة المدرس
+      </a>
+      <a href="student.html" class="menu-item active">
+        <span class="menu-icon">👨‍🎓</span>
+        صفحة الطالب
+      </a>
+      <a href="cards.html" class="menu-item">
+        <span class="menu-icon">🃏</span>
+        عرض البطاقات
+      </a>
+    </div>
+  </div>
 
-<script>
-const units = JSON.parse(localStorage.getItem("units")) || [];
-const container = document.getElementById("units");
+  <!-- المحتوى الرئيسي -->
+  <div class="main-content">
+    <h1 class="page-title">📚 اختر الوحدة</h1>
 
-units.forEach((u,i)=>{
-  const btn = document.createElement("button");
-  btn.textContent = u.unitName;
-  btn.onclick = ()=>{
-    localStorage.setItem("currentUnit", i);
-    location.href = "cards.html";
-  };
-  container.appendChild(btn);
-});
-</script>
-<a href="index.html">student</a>
+    <div class="units-grid" id="units"></div>
+
+    <p class="no-units" id="noUnitsMsg" style="display:none;">لا توجد وحدات متاحة حالياً 😔<br>اطلب من المدرس إضافة وحدات جديدة</p>
+  </div>
+
+  <script>
+    const units = JSON.parse(localStorage.getItem("units")) || [];
+    const container = document.getElementById("units");
+    const noUnitsMsg = document.getElementById("noUnitsMsg");
+
+    if (units.length === 0) {
+      noUnitsMsg.style.display = "block";
+    } else {
+      units.forEach((u, i) => {
+        const card = document.createElement("div");
+        card.className = "unit-card";
+
+        const btn = document.createElement("button");
+        btn.textContent = u.unitName;
+
+        btn.onclick = () => {
+          localStorage.setItem("currentUnit", i);
+          location.href = "cards.html";
+        };
+
+        card.appendChild(btn);
+        container.appendChild(card);
+      });
+    }
+  </script>
+
 </body>
 </html>
