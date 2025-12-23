@@ -4,9 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>صفحة الطالب</title>
-
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
-
   <style>
     body {
       font-family: 'Tajawal', sans-serif;
@@ -14,10 +12,9 @@
       margin: 0;
       padding: 0;
       min-height: 100vh;
-      display: flex;
     }
 
-    /* ==== الـ Sidebar ==== */
+    /* Sidebar للديسكتوب فقط */
     .sidebar {
       width: 280px;
       background: white;
@@ -54,16 +51,20 @@
     .menu-item:hover { background: #f0f0f0; color: #D32F2F; }
 
     .menu-item.active { background: #D32F2F; color: white; font-weight: 700; }
-    .menu-item.active:hover { background: #b71c1c; }
 
     .menu-icon { font-size: 28px; margin-left: 16px; }
 
-    /* ==== المحتوى الرئيسي ==== */
+    /* Main Content */
     .main-content {
-      flex: 1;
-      padding: 40px 30px;
-      margin-right: 280px;
-      box-sizing: border-box;
+      padding: 40px 20px;
+      transition: margin-right 0.3s;
+    }
+
+    /* للديسكتوب: Sidebar جانبي */
+    @media (min-width: 769px) {
+      .main-content {
+        margin-right: 280px;
+      }
     }
 
     .page-title {
@@ -71,40 +72,40 @@
       font-size: 28px;
       font-weight: 700;
       color: #D32F2F;
-      margin-bottom: 50px;
+      margin-bottom: 40px;
     }
 
     .units-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 30px;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 24px;
       max-width: 1400px;
       margin: 0 auto;
     }
 
     .unit-card {
       background: white;
-      border-radius: 24px;
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+      border-radius: 20px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
       overflow: hidden;
-      transition: all 0.4s ease;
+      transition: all 0.3s ease;
       cursor: pointer;
     }
 
     .unit-card:hover {
-      transform: translateY(-12px);
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+      transform: translateY(-8px);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
     }
 
     .unit-card button {
       width: 100%;
-      padding: 40px 20px;
+      padding: 50px 20px;
       font-size: 22px;
       font-weight: 700;
       background: #D32F2F;
       color: white;
       border: none;
-      border-radius: 24px;
+      border-radius: 20px;
       cursor: pointer;
       transition: background 0.3s;
     }
@@ -119,69 +120,108 @@
       color: #777;
       margin-top: 80px;
       line-height: 1.8;
-      grid-column: 1 / -1;
     }
 
-    /* Responsive تحسين كبير */
-    @media (max-width: 1024px) {
-      .units-grid {
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 24px;
-      }
+    /* Bottom Navigation للموبايل والتابلت */
+    .bottom-nav {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      border-top: 1px solid #eee;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+      padding: 10px 0;
+      justify-content: space-around;
+      z-index: 1000;
     }
 
+    .bottom-nav a {
+      text-align: center;
+      color: #999;
+      font-size: 14px;
+      text-decoration: none;
+      flex: 1;
+    }
+
+    .bottom-nav a.active {
+      color: #D32F2F;
+      font-weight: 700;
+    }
+
+    .bottom-nav .nav-icon {
+      font-size: 28px;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    /* Responsive */
     @media (max-width: 768px) {
       .sidebar {
-        width: 100%;
-        height: auto;
-        position: relative;
-        box-shadow: none;
+        display: none; /* إخفاء الـ Sidebar الجانبي */
       }
+
       .main-content {
-        margin-right: 0;
-        padding: 30px 20px;
+        padding-bottom: 80px; /* مساحة للـ bottom nav */
       }
-      body {
-        flex-direction: column;
+
+      .bottom-nav {
+        display: flex;
       }
-      .page-title {
-        font-size: 24px;
-        margin-bottom: 40px;
-      }
+
       .units-grid {
         grid-template-columns: 1fr;
         gap: 20px;
       }
+
       .unit-card button {
-        padding: 35px 20px;
-        font-size: 20px;
+        padding: 45px 20px;
+        font-size: 21px;
+      }
+
+      .page-title {
+        font-size: 24px;
+        margin-bottom: 30px;
+      }
+
+      .unit-card:hover {
+        transform: none;
       }
     }
 
     @media (max-width: 480px) {
-      .unit-card button {
-        padding: 30px 15px;
-        font-size: 19px;
-      }
       .page-title {
         font-size: 22px;
+      }
+
+      .unit-card button {
+        padding: 40px 15px;
+        font-size: 20px;
       }
     }
   </style>
 </head>
 <body>
 
-  <!-- Sidebar -->
+  <!-- Sidebar للديسكتوب -->
   <div class="sidebar">
     <div class="sidebar-header">📚 لوحة التحكم</div>
     <div class="sidebar-menu">
       <a href="index.html" class="menu-item"><span class="menu-icon">👨‍🏫</span> لوحة المدرس</a>
       <a href="student.html" class="menu-item active"><span class="menu-icon">👨‍🎓</span> صفحة الطالب</a>
-      <a href="cards.html" class="menu-item"><span class="menu-icon">🃏</span> عرض البطاقات</a>
+      <a href="cards.html" class="menu-item"><span class="menu-icon">🃏</span> البطاقات</a>
     </div>
   </div>
 
-  <!-- المحتوى -->
+  <!-- Bottom Navigation للموبايل -->
+  <div class="bottom-nav">
+    <a href="admin.html"><span class="nav-icon">👨‍🏫</span> لوحة المدرس</a>
+    <a href="student.html" class="active"><span class="nav-icon">👨‍🎓</span> الطالب</a>
+    <a href="cards.html"><span class="nav-icon">🃏</span> البطاقات</a>
+  </div>
+
+  <!-- Main Content -->
   <div class="main-content">
     <h1 class="page-title">📚 اختر الوحدة</h1>
 
@@ -221,4 +261,3 @@
 
 </body>
 </html>
-
