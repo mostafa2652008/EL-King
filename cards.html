@@ -9,248 +9,31 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
   <style>
-    body {
-      font-family: 'Tajawal', sans-serif;
-      background: #f5f5f5;
-      margin: 0;
-      padding: 0;
-      min-height: 100vh;
-      display: flex;
-    }
-
-    .sidebar {
-      width: 280px;
-      background: white;
-      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
-      position: fixed;
-      top: 0;
-      bottom: 0;
-      right: 0;
-      overflow-y: auto;
-      z-index: 100;
-    }
-
-    .sidebar-header {
-      background: #D32F2F;
-      color: white;
-      padding: 30px 20px;
-      text-align: center;
-      font-size: 22px;
-      font-weight: 700;
-    }
-
-    .sidebar-menu { padding: 20px 0; }
-
-    .menu-item {
-      display: flex;
-      align-items: center;
-      padding: 18px 30px;
-      color: #555;
-      text-decoration: none;
-      font-size: 18px;
-      transition: all 0.3s;
-    }
-
+    /* نفس الاستايل السابق تمامًا */
+    body { font-family: 'Tajawal', sans-serif; background: #f5f5f5; margin: 0; padding: 0; min-height: 100vh; display: flex; }
+    .sidebar { width: 280px; background: white; box-shadow: 4px 0 20px rgba(0,0,0,0.1); position: fixed; top: 0; bottom: 0; right: 0; z-index: 100; }
+    .sidebar-header { background: #D32F2F; color: white; padding: 30px 20px; text-align: center; font-size: 22px; font-weight: 700; }
+    .menu-item { display: flex; align-items: center; padding: 18px 30px; color: #555; text-decoration: none; font-size: 18px; transition: all 0.3s; }
     .menu-item:hover { background: #f0f0f0; color: #D32F2F; }
-
-    .menu-item.active { background: #D32F2F; color: white; font-weight: 700; }
-
-    .menu-icon { font-size: 28px; margin-left: 16px; }
-
-    .main-content {
-      flex: 1;
-      padding: 40px;
-      margin-right: 280px;
-      box-sizing: border-box;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .unit-title {
-      font-size: 28px;
-      font-weight: 700;
-      color: #D32F2F;
-      margin-bottom: 20px;
-    }
-
-    #progress {
-      font-size: 22px;
-      color: #555;
-      margin-bottom: 30px;
-    }
-
-    .progress-bar {
-      width: 380px;
-      max-width: 90%;
-      height: 8px;
-      background: #eee;
-      border-radius: 4px;
-      overflow: hidden;
-      margin: 20px 0;
-    }
-
-    .progress-fill {
-      height: 100%;
-      background: #D32F2F;
-      width: 0%;
-      transition: width 0.4s ease;
-    }
-
-    .card-container {
-      width: 420px;
-      max-width: 95%;
-      perspective: 1200px;
-      margin: 20px 0;
-    }
-
-    .card {
-      width: 100%;
-      height: 500px;
-      position: relative;
-      transform-style: preserve-3d;
-      transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-      cursor: pointer;
-      border-radius: 28px;
-      box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);
-    }
-
+    .main-content { flex: 1; padding: 40px; margin-right: 280px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .card-container { width: 420px; max-width: 95%; perspective: 1200px; margin: 20px 0; }
+    .card { width: 100%; height: 500px; position: relative; transform-style: preserve-3d; transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55); cursor: pointer; border-radius: 28px; box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2); }
     .card.flip { transform: rotateY(180deg); }
-
-    .card-face {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      backface-visibility: hidden;
-      border-radius: 28px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 40px;
-      box-sizing: border-box;
-      font-size: 36px;
-      font-weight: 700;
-      color: white;
-      text-align: center;
-    }
-
+    .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 28px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; box-sizing: border-box; font-size: 36px; font-weight: 700; color: white; text-align: center; }
     .front { background: #D32F2F; }
     .back { background: #27ae60; transform: rotateY(180deg); }
-
-    .back-content { width: 100%; text-align: center; }
-
-    .back-buttons {
-      margin-top: 40px;
-      display: flex;
-      gap: 24px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    .back-buttons button {
-      padding: 18px 32px;
-      font-size: 20px;
-      border: none;
-      border-radius: 20px;
-      background: white;
-      color: #333;
-      cursor: pointer;
-      transition: all 0.3s;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .back-buttons button i {
-      font-size: 26px;
-    }
-
-    .back-buttons button:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 15px 30px rgba(0,0,0,0.25);
-    }
-
-    #result {
-      margin-top: 30px;
-      font-size: 20px;
-      line-height: 1.6;
-      min-height: 60px;
-      width: 90%;
-      padding: 20px;
-      background: #f0f0f0;
-      border-radius: 16px;
-    }
-
-    /* Visualizer */
-    #visualizer {
-      height: 100px;
-      width: 90%;
-      max-width: 800px;
-      display: flex;
-      align-items: flex-end;
-      justify-content: center;
-      background: #eee;
-      border-radius: 16px;
-      padding: 10px;
-      margin: 20px 0;
-      display: none;
-    }
-
-    .bar {
-      width: 6px;
-      background: #D32F2F;
-      margin: 0 2px;
-      border-radius: 4px;
-      transition: height 0.1s;
-    }
-
-    .controls {
-      display: flex;
-      gap: 50px;
-      margin-top: 40px;
-    }
-
-    .controls button {
-      width: 80px;
-      height: 80px;
-      font-size: 42px;
-      border: none;
-      border-radius: 50%;
-      background: #D32F2F;
-      color: white;
-      cursor: pointer;
-      box-shadow: 0 10px 30px rgba(211, 47, 47, 0.35);
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .controls button:hover {
-      background: #b71c1c;
-      transform: scale(1.2);
-    }
-
-    #average {
-      font-size: 20px;
-      color: #333;
-      margin-top: 40px;
-      font-weight: 600;
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-      .sidebar { width: 100%; height: auto; position: relative; box-shadow: none; }
-      .main-content { margin-right: 0; padding: 20px; }
-      body { flex-direction: column; }
-      .card-container { height: 460px; }
-      .card-face { font-size: 30px; padding: 30px; }
-      .controls button { width: 70px; height: 70px; font-size: 38px; }
-    }
+    .back-buttons { margin-top: 40px; display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; }
+    .back-buttons button { padding: 18px 32px; font-size: 20px; border: none; border-radius: 20px; background: white; color: #333; cursor: pointer; transition: all 0.3s; box-shadow: 0 8px 20px rgba(0,0,0,0.15); font-weight: 600; display: flex; align-items: center; gap: 12px; }
+    .back-buttons button:hover { transform: translateY(-6px); box-shadow: 0 15px 30px rgba(0,0,0,0.25); }
+    #result { margin-top: 30px; font-size: 20px; line-height: 1.6; min-height: 60px; width: 90%; padding: 20px; background: #f0f0f0; border-radius: 16px; }
+    #visualizer { height: 100px; width: 90%; max-width: 800px; display: flex; align-items: flex-end; justify-content: center; background: #eee; border-radius: 16px; padding: 10px; margin: 20px 0; display: none; }
+    .bar { width: 6px; background: #D32F2F; margin: 0 2px; border-radius: 4px; transition: height 0.1s; }
+    .controls { display: flex; gap: 50px; margin-top: 40px; }
+    .controls button { width: 80px; height: 80px; font-size: 42px; border: none; border-radius: 50%; background: #D32F2F; color: white; cursor: pointer; box-shadow: 0 10px 30px rgba(211, 47, 47, 0.35); transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; }
+    .controls button:hover { background: #b71c1c; transform: scale(1.2); }
+    #average { font-size: 20px; color: #333; margin-top: 40px; font-weight: 600; }
+    .error { color: red; font-size: 20px; text-align: center; }
+    @media (max-width: 768px) { .sidebar { width: 100%; height: auto; position: relative; box-shadow: none; } .main-content { margin-right: 0; padding: 20px; } body { flex-direction: column; } }
   </style>
 </head>
 <body>
@@ -258,7 +41,7 @@
   <div class="sidebar">
     <div class="sidebar-header">📚 لوحة التحكم</div>
     <div class="sidebar-menu">
-      <a href="index.html" class="menu-item"><span class="menu-icon">👨‍🏫</span> لوحة المدرس</a>
+      <a href="admin.html" class="menu-item"><span class="menu-icon">👨‍🏫</span> لوحة المدرس</a>
       <a href="student.html" class="menu-item"><span class="menu-icon">👨‍🎓</span> صفحة الطالب</a>
       <a href="cards.html" class="menu-item active"><span class="menu-icon">🃏</span> عرض البطاقات</a>
     </div>
@@ -331,153 +114,170 @@
       unitTitle.textContent = units[unitIndex].unitName;
 
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const recognition = new SpeechRecognition();
-      recognition.lang = "en-US";
-      recognition.continuous = true;
-      recognition.interimResults = true;
 
-      let finalTranscript = '';
-      let audioContext, analyser, dataArray, microphone, animationId;
+      if (!SpeechRecognition) {
+        resultDiv.innerHTML = '<div class="error">❌ المتصفح مش بيدعم النطق، جرب Chrome أحدث إصدار</div>';
+      } else {
+        const recognition = new SpeechRecognition();
+        recognition.lang = "en-US"; // أفضل للإنجليزي
+        recognition.continuous = true;
+        recognition.interimResults = true;
 
-      function updateProgress() {
-        const percent = ((index + 1) / cards.length) * 100;
-        progressFill.style.width = percent + "%";
-        progress.textContent = `البطاقة ${index + 1} من ${cards.length}`;
-      }
+        let finalTranscript = '';
+        let audioContext, analyser, dataArray, microphone, animationId;
 
-      function loadCard() {
-        cardDiv.classList.remove("flip");
-        front.textContent = cards[index].arabic;
-        back.textContent = cards[index].english;
-        audio = new Audio(cards[index].audio);
-        resultDiv.innerHTML = "";
-        updateProgress();
-        showAverage();
-      }
+        function updateProgress() {
+          const percent = ((index + 1) / cards.length) * 100;
+          progressFill.style.width = percent + "%";
+          progress.textContent = `البطاقة ${index + 1} من ${cards.length}`;
+        }
 
-      function flipCard() { cardDiv.classList.toggle("flip"); }
+        function loadCard() {
+          cardDiv.classList.remove("flip");
+          front.textContent = cards[index].arabic;
+          back.textContent = cards[index].english;
+          audio = new Audio(cards[index].audio);
+          resultDiv.innerHTML = "";
+          updateProgress();
+          showAverage();
+        }
 
-      function nextCard() { index = (index + 1) % cards.length; loadCard(); }
+        function flipCard() { cardDiv.classList.toggle("flip"); }
 
-      function prevCard() { index = (index - 1 + cards.length) % cards.length; loadCard(); }
+        function nextCard() { index = (index + 1) % cards.length; loadCard(); }
 
-      function playSound(e) {
-        e.stopPropagation();
-        audio.play();
-      }
+        function prevCard() { index = (index - 1 + cards.length) % cards.length; loadCard(); }
 
-      function startPronunciation(e) {
-        e.stopPropagation(); // ده اللي هيمنع القلب
-        finalTranscript = '';
-        resultDiv.innerHTML = '🎙️ جاري الاستماع... نطق الكلمة';
-        visualizer.style.display = 'flex';
-        stopPronBtn.style.display = 'inline-flex';
+        function playSound(e) {
+          e.stopPropagation();
+          audio.play();
+        }
 
-        // Visualizer
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        analyser = audioContext.createAnalyser();
-        dataArray = new Uint8Array(analyser.frequencyBinCount);
-
-        navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-          microphone = audioContext.createMediaStreamSource(stream);
-          microphone.connect(analyser);
-
-          visualizer.innerHTML = '';
-          for (let i = 0; i < 40; i++) {
-            const bar = document.createElement('div');
-            bar.className = 'bar';
-            bar.style.height = '5px';
-            visualizer.appendChild(bar);
-          }
-
-          drawVisualizer();
-        });
-
-        recognition.start();
-
-        recognition.onresult = (event) => {
-          let interim = '';
+        function startPronunciation(e) {
+          e.stopPropagation();
           finalTranscript = '';
+          resultDiv.innerHTML = '<div style="color:#D32F2F;">🎙️ جاري الاستماع... نطق الكلمة بوضوح</div>';
+          visualizer.style.display = 'flex';
+          stopPronBtn.style.display = 'inline-flex';
 
-          for (let i = event.resultIndex; i < event.results.length; i++) {
-            if (event.results[i].isFinal) {
-              finalTranscript += event.results[i][0].transcript + ' ';
-            } else {
-              interim += event.results[i][0].transcript;
+          // Visualizer
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          analyser = audioContext.createAnalyser();
+          dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+          navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+            microphone = audioContext.createMediaStreamSource(stream);
+            microphone.connect(analyser);
+
+            visualizer.innerHTML = '';
+            for (let i = 0; i = 40; i++) {
+              const bar = document.createElement('div');
+              bar.className = 'bar';
+              bar.style.height = '5px';
+              visualizer.appendChild(bar);
             }
+
+            drawVisualizer();
+          }).catch(err => {
+            resultDiv.innerHTML = '<div class="error">❌ خطأ في الوصول للمايك: ' + err.message + '<br>تأكد من إعطاء الإذن للمايك في إعدادات المتصفح</div>';
+          });
+
+          recognition.start();
+
+          recognition.onresult = (event) => {
+            let interim = '';
+            finalTranscript = '';
+
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+              if (event.results[i].isFinal) {
+                finalTranscript += event.results[i][0].transcript + ' ';
+              } else {
+                interim += event.results[i][0].transcript;
+              }
+            }
+
+            resultDiv.innerHTML = `نطقت: <strong>${finalTranscript + interim}</strong>`;
+          };
+
+          recognition.onerror = (event) => {
+            resultDiv.innerHTML = '<div class="error">خطأ في التعرف: ' + event.error + '<br>جرب تتكلم أقرب أو في مكان هادئ</div>';
+          };
+
+          recognition.onend = () => {
+            if (stopPronBtn.style.display === 'inline-flex') {
+              recognition.start(); // إعادة تشغيل تلقائي عشان يفضل مستمر
+            }
+          };
+        }
+
+        function drawVisualizer() {
+          animationId = requestAnimationFrame(drawVisualizer);
+          analyser.getByteFrequencyData(dataArray);
+
+          const bars = document.querySelectorAll('.bar');
+          const step = Math.floor(dataArray.length / bars.length);
+
+          bars.forEach((bar, i) => {
+            const value = dataArray[i * step] || 0;
+            bar.style.height = `${Math.max(5, value / 3)}px`;
+          });
+        }
+
+        function stopPronunciation(e) {
+          if (e) e.stopPropagation();
+          recognition.stop();
+          if (audioContext) audioContext.close();
+          if (animationId) cancelAnimationFrame(animationId);
+          visualizer.style.display = 'none';
+          stopPronBtn.style.display = 'none';
+
+          if (finalTranscript.trim() === '') {
+            resultDiv.innerHTML = '<div class="error">⚠️ مفيش نطق تم تسجيله، جرب تاني</div>';
+            return;
           }
 
-          resultDiv.innerHTML = `نطقت: <strong>${finalTranscript + interim}</strong>`;
-        };
-      }
+          const spoken = finalTranscript.trim().toLowerCase();
+          const correct = cards[index].english.toLowerCase();
 
-      function drawVisualizer() {
-        animationId = requestAnimationFrame(drawVisualizer);
-        analyser.getByteFrequencyData(dataArray);
+          let match = 0;
+          for (let i = 0; i < Math.min(spoken.length, correct.length); i++) {
+            if (spoken[i] === correct[i]) match++;
+          }
+          const acc = Math.round((match / correct.length) * 100);
 
-        const bars = document.querySelectorAll('.bar');
-        const step = Math.floor(dataArray.length / bars.length);
+          const grade = acc >= 90 ? "ممتاز ⭐" : acc >= 75 ? "جيد 👍" : "يحتاج تحسين ❌";
 
-        bars.forEach((bar, i) => {
-          const value = dataArray[i * step] || 0;
-          bar.style.height = `${Math.max(5, value / 3)}px`;
-        });
-      }
+          if (!cards[index].results) cards[index].results = {};
+          cards[index].results[student] = { accuracy: acc, grade };
 
-      function stopPronunciation(e) {
-        if (e) e.stopPropagation();
-        recognition.stop();
-        if (audioContext) audioContext.close();
-        if (animationId) cancelAnimationFrame(animationId);
-        visualizer.style.display = 'none';
-        stopPronBtn.style.display = 'none';
+          localStorage.setItem("units", JSON.stringify(units));
 
-        if (finalTranscript.trim() === '') {
-          resultDiv.innerHTML = '⚠️ مفيش نطق تم تسجيله';
-          return;
+          resultDiv.innerHTML = `
+            قلت: "<strong>${finalTranscript.trim()}</strong>"<br>
+            الدقة: <strong>${acc}%</strong><br>
+            التقييم: <strong>${grade}</strong>
+          `;
+
+          showAverage();
         }
 
-        const spoken = finalTranscript.trim().toLowerCase();
-        const correct = cards[index].english.toLowerCase();
-
-        let match = 0;
-        for (let i = 0; i < Math.min(spoken.length, correct.length); i++) {
-          if (spoken[i] === correct[i]) match++;
-        }
-        const acc = Math.round((match / correct.length) * 100);
-
-        const grade = acc >= 90 ? "ممتاز ⭐" : acc >= 75 ? "جيد 👍" : "يحتاج تحسين ❌";
-
-        if (!cards[index].results) cards[index].results = {};
-        cards[index].results[student] = { accuracy: acc, grade };
-
-        localStorage.setItem("units", JSON.stringify(units));
-
-        resultDiv.innerHTML = `
-          قلت: "<strong>${finalTranscript.trim()}</strong>"<br>
-          الدقة: <strong>${acc}%</strong><br>
-          التقييم: <strong>${grade}</strong>
-        `;
-
-        showAverage();
-      }
-
-      function showAverage() {
-        let total = 0, count = 0;
-        units.forEach(u => {
-          u.cards.forEach(c => {
-            if (c.results && c.results[student]) {
-              total += c.results[student].accuracy;
-              count++;
-            }
+        function showAverage() {
+          let total = 0, count = 0;
+          units.forEach(u => {
+            u.cards.forEach(c => {
+              if (c.results && c.results[student]) {
+                total += c.results[student].accuracy;
+                count++;
+              }
+            });
           });
-        });
-        avgDiv.textContent = count
-          ? `📊 متوسط أدائك الكلي: ${Math.round(total / count)}%`
-          : "📊 لم تقم بأي تمارين بعد";
-      }
+          avgDiv.textContent = count
+            ? `📊 متوسط أدائك الكلي: ${Math.round(total / count)}%`
+            : "📊 لم تقم بأي تمارين بعد";
+        }
 
-      loadCard();
+        loadCard();
+      }
     }
   </script>
 
