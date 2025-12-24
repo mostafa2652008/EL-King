@@ -4,8 +4,234 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>لوحة المدرس</title>
-
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+    import { getFirestore, collection, getDocs, doc, getDoc, deleteDoc, updateDoc, addDoc, arrayUnion, query, where } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA9WXBcRf8QBsRAafAcnKYVFx_kF5B0Gr0",
+      authDomain: "educate-a2aad.firebaseapp.com",
+      projectId: "educate-a2aad",
+      storageBucket: "educate-a2aad.firebasestorage.app",
+      messagingSenderId: "237633521728",
+      appId: "1:237633521728:web:1ec7e6aae3ae0711ef37a5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let audioBase64 = "";
+    let currentEditingUnitId = null;
+
+    // حدد هنا إيميلك (أو إيميلات الأدمن)
+    const adminEmails = [
+      "mo2652008@gmail.com",  // ← غيّر ده لإيميلك الحقيقي
+    ];
+
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      const userEmail = user.email.toLowerCase();
+      if (!adminEmails.includes(userEmail)) {
+        alert("غير مصرح لك بالدخول إلى هذه الصفحة");
+        window.location.href = "student.html";
+        return;
+      }
+
+      localStorage.setItem("userId", user.uid);
+      loadAdminContent();
+    });
+
+    async function loadAdminContent() {
+      document.getElementById("adminSection").style.display = "block";
+      await loadUsers();
+      await loadUnits();
+    }
+
+    async function loadUsers() {
+      const container = document.getElementById("usersList");
+      container.innerHTML = "<p>جاري تحميل المستخدمين...</p>";
+
+      try {
+        const querySnapshot = await getDocs(collection(db, "users"));
+        container.innerHTML = "";
+
+        if (querySnapshot.empty) {
+          container.innerHTML = "<p>لا يوجد مستخدمين حتى الآن</p>";
+          return;
+        }
+
+        querySnapshot.forEach((docSnap) => {
+          const userData = docSnap.data();
+          const userId = docSnap.id;
+
+          const div = document.createElement("div");
+          div.className = "user-card";
+          div.innerHTML = `
+            <div style="padding: 15px; border-bottom: 1px solid #eee;">
+              <strong>${userData.displayName || "غير مسمى"}</strong> 
+              <small>(${userData.email})</small><br>
+              <small>دور: ${userData.role || "طالب"}</small><br>
+              <small>إحصائيات: دقة متوسطة ${userData.stats?.totalAccuracy || 0}% - وحدات مكتملة ${userData.stats?.completedUnits || 0}</small>
+              <button class="delete-btn" onclick="deleteUser('${userId}')">حذف الحساب</button>
+            </div>
+          `;
+          container.appendChild(div);
+        });
+      } catch (error) {
+        console.error("Error loading users:", error);
+        container.innerHTML = "<p>حدث خطأ أثناء تحميل المستخدمين</p>";
+      }
+    }
+
+    async function loadUnits() {
+      const container = document.getElementById("unitsList");
+      container.innerHTML = "<p>جاري تحميل الوحدات...</p>";
+
+      try {
+        const querySnapshot = await getDocs(collection(db, "units"));
+        container.innerHTML = "";
+
+        if (querySnapshot.empty) {
+          container.innerHTML = "<p>لا توجد وحدات مضافة</p>";
+          return;
+        }
+
+        querySnapshot.forEach((docSnap) => {
+          const unit = docSnap.data();
+          const unitId = docSnap.id;
+
+          const div = document.createElement("div");
+          div.className = "unit-card";
+          div.innerHTML = `
+            <div style="padding: 15px;">
+              <strong>${unit.unitName || "وحدة غير مسماة"}</strong><br>
+              <small>عدد الكروت: ${unit.cards?.length || 0}</small>
+              <button class="edit-btn" onclick="openEditUnitModal('${unitId}', '${unit.unitName || ''}')">تعديل</button>
+              <button class="delete-btn" onclick="deleteUnit('${unitId}')">حذف</button>
+            </div>
+          `;
+          container.appendChild(div);
+        });
+      } catch (error) {
+        console.error("Error loading units:", error);
+        container.innerHTML = "<p>حدث خطأ أثناء تحميل الوحدات</p>";
+      }
+    }
+
+    function openEditUnitModal(unitId, currentName) {
+      currentEditingUnitId = unitId;
+      document.getElementById("editUnitName").value = currentName;
+      document.getElementById("editModal").style.display = "block";
+    }
+
+    async function saveUnitEdit() {
+      const newName = document.getElementById("editUnitName").value.trim();
+      if (!newName) return alert("اكتب اسم الوحدة");
+
+      try {
+        await updateDoc(doc(db, "units", currentEditingUnitId), {
+          unitName: newName
+        });
+        alert("تم تعديل اسم الوحدة");
+        document.getElementById("editModal").style.display = "none";
+        loadUnits();
+      } catch (error) {
+        alert("خطأ في التعديل: " + error.message);
+      }
+    }
+
+    async function deleteUnit(unitId) {
+      if (confirm("متأكد من حذف الوحدة دي؟")) {
+        try {
+          await deleteDoc(doc(db, "units", unitId));
+          alert("تم حذف الوحدة");
+          loadUnits();
+        } catch (error) {
+          alert("خطأ في الحذف: " + error.message);
+        }
+      }
+    }
+
+    async function deleteUser(userId) {
+      if (confirm("متأكد من حذف الحساب ده؟")) {
+        try {
+          await deleteDoc(doc(db, "users", userId));
+          alert("تم حذف الحساب");
+          loadUsers();
+        } catch (error) {
+          alert("خطأ في الحذف: " + error.message);
+        }
+      }
+    }
+
+    document.getElementById("audio").onchange = function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => audioBase64 = reader.result;
+      reader.readAsDataURL(file);
+    };
+
+    async function addCard() {
+      const unitName = document.getElementById("unitName").value.trim();
+      const arabic = document.getElementById("arabic").value.trim();
+      const english = document.getElementById("english").value.trim();
+
+      if (!unitName || !arabic || !english || !audioBase64) {
+        alert("⚠️ كمل كل البيانات");
+        return;
+      }
+
+      try {
+        const q = query(collection(db, "units"), where("unitName", "==", unitName));
+        const querySnapshot = await getDocs(q);
+
+        const newCard = {
+          arabic,
+          english,
+          audio: audioBase64,
+          results: {}
+        };
+
+        if (!querySnapshot.empty) {
+          const unitDoc = querySnapshot.docs[0];
+          await updateDoc(doc(db, "units", unitDoc.id), {
+            cards: arrayUnion(newCard)
+          });
+        } else {
+          await addDoc(collection(db, "units"), {
+            unitName,
+            cards: [newCard]
+          });
+        }
+
+        alert("✅ تم إضافة البطاقة بنجاح!");
+        document.getElementById("unitName").value = "";
+        document.getElementById("arabic").value = "";
+        document.getElementById("english").value = "";
+        document.getElementById("audio").value = "";
+        audioBase64 = "";
+      } catch (error) {
+        console.error("Error adding card: ", error);
+        alert("حدث خطأ أثناء الحفظ");
+      }
+    }
+
+    window.signOutUser = async () => {
+      await signOut(auth);
+      localStorage.removeItem("userId");
+      window.location.href = "login.html";
+    };
+  </script>
 
   <style>
     body {
@@ -16,8 +242,6 @@
       min-height: 100vh;
       display: flex;
     }
-
-    /* ==== الـ Sidebar الجانبي ==== */
     .sidebar {
       width: 280px;
       background: white;
@@ -29,7 +253,6 @@
       overflow-y: auto;
       z-index: 100;
     }
-
     .sidebar-header {
       background: #D32F2F;
       color: white;
@@ -38,11 +261,9 @@
       font-size: 22px;
       font-weight: 700;
     }
-
     .sidebar-menu {
       padding: 20px 0;
     }
-
     .menu-item {
       display: flex;
       align-items: center;
@@ -52,129 +273,108 @@
       font-size: 18px;
       transition: all 0.3s;
     }
-
     .menu-item:hover {
       background: #f0f0f0;
       color: #D32F2F;
     }
-
     .menu-item.active {
       background: #D32F2F;
       color: white;
       font-weight: 700;
     }
-
-    .menu-item.active:hover {
-      background: #b71c1c;
-    }
-
     .menu-icon {
       font-size: 28px;
       margin-left: 16px;
     }
-
-    /* ==== المحتوى الرئيسي ==== */
     .main-content {
       flex: 1;
       padding: 30px;
-      margin-right: 280px; /* مساحة للـ sidebar */
+      margin-right: 280px;
       box-sizing: border-box;
     }
-
-    .box {
+    .box, .admin-section {
       background: white;
-      width: 100%;
-      max-width: 500px;
-      margin: 0 auto;
       border-radius: 20px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      padding: 20px;
+      margin-bottom: 30px;
     }
-
     .header {
       background: #D32F2F;
       color: white;
-      padding: 20px;
+      padding: 15px;
       text-align: center;
       font-size: 20px;
       font-weight: 700;
+      border-radius: 10px 10px 0 0;
     }
-
     .content {
-      padding: 24px;
+      padding: 20px;
     }
-
     .input-group {
       margin-bottom: 16px;
     }
-
     label {
       display: block;
       margin-bottom: 8px;
-      font-size: 15px;
-      color: #333;
       font-weight: 500;
     }
-
-    input[type="text"],
-    input[type="file"] {
+    input[type="text"], input[type="file"] {
       width: 100%;
-      padding: 14px;
-      border-radius: 12px;
-      border: 1px solid #ddd;
-      background: #fafafa;
-      font-size: 16px;
-      box-sizing: border-box;
-    }
-
-    input[type="file"] {
       padding: 12px;
-      cursor: pointer;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
     }
-
     button {
-      width: 100%;
-      padding: 16px;
-      margin-top: 20px;
-      background: #D32F2F;
-      color: white;
+      padding: 12px 20px;
       border: none;
-      border-radius: 12px;
-      font-size: 18px;
-      font-weight: 700;
+      border-radius: 8px;
       cursor: pointer;
-      transition: background 0.3s;
+      font-weight: bold;
+      margin: 5px 0;
     }
-
-    button:hover {
-      background: #b71c1c;
+    .add-btn { background: #27ae60; color: white; }
+    .edit-btn { background: #3498db; color: white; }
+    .delete-btn { background: #e74c3c; color: white; }
+    .user-card, .unit-card {
+      background: #f9f9f9;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
     }
-
-    /* للشاشات الصغيرة (موبايل) */
+    #editModal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+    }
     @media (max-width: 768px) {
-      .sidebar {
-        width: 100%;
-        height: auto;
-        position: relative;
-        box-shadow: none;
-      }
-      .main-content {
-        margin-right: 0;
-        padding: 20px;
-      }
-      body {
-        flex-direction: column;
-      }
+      .sidebar { display: none; }
+      .main-content { margin-right: 0; padding: 20px; }
+      body { flex-direction: column; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Sidebar جانبي -->
   <div class="sidebar">
-    <div class="sidebar-header">
-      📚 لوحة التحكم
-    </div>
+    <div class="sidebar-header">📚 لوحة التحكم</div>
     <div class="sidebar-menu">
       <a href="index.html" class="menu-item active">
         <span class="menu-icon">👨‍🏫</span>
@@ -188,86 +388,59 @@
         <span class="menu-icon">🃏</span>
         عرض البطاقات
       </a>
+      <a href="#" onclick="signOutUser(); return false;" class="menu-item">
+        <span class="menu-icon">🚪</span>
+        خروج
+      </a>
     </div>
   </div>
 
-  <!-- المحتوى الرئيسي -->
   <div class="main-content">
+    <h1 class="page-title">👨‍🏫 لوحة المدرس</h1>
+
     <div class="box">
       <div class="header">
-        👨‍🏫 إضافة بطاقة جديدة
+        إضافة بطاقة جديدة
       </div>
-
       <div class="content">
         <div class="input-group">
           <label>اسم الـ Unit</label>
           <input type="text" id="unitName" placeholder="مثال: Unit 1 - Greetings">
         </div>
-
         <div class="input-group">
           <label>الكلمة بالعربي</label>
           <input type="text" id="arabic" placeholder="مثال: مرحبا">
         </div>
-
         <div class="input-group">
           <label>الكلمة بالإنجليزي</label>
           <input type="text" id="english" placeholder="مثال: Hello">
         </div>
-
         <div class="input-group">
           <label>ملف الصوت</label>
           <input type="file" id="audio" accept="audio/*">
         </div>
+        <button class="add-btn" onclick="addCard()">➕ إضافة البطاقة</button>
+      </div>
+    </div>
 
-        <button onclick="addCard()">➕ إضافة البطاقة</button>
+    <div class="admin-section" id="adminSection">
+      <h2>المستخدمين</h2>
+      <div id="usersList">جاري التحميل...</div>
+
+      <h2 style="margin-top: 40px;">الوحدات المضافة</h2>
+      <div id="unitsList">جاري التحميل...</div>
+    </div>
+
+    <!-- Modal لتعديل اسم الوحدة -->
+    <div id="editModal">
+      <div class="modal-content">
+        <h2>تعديل اسم الوحدة</h2>
+        <input type="text" id="editUnitName" placeholder="اسم الوحدة الجديد" style="width: 100%; padding: 12px; margin: 15px 0; border-radius: 8px; border: 1px solid #ddd;">
+        <button class="add-btn" onclick="saveUnitEdit()">حفظ التعديل</button>
+        <button style="background: #95a5a6; color: white; margin-top: 10px;" onclick="document.getElementById('editModal').style.display='none'">إلغاء</button>
       </div>
     </div>
   </div>
-
-  <script>
-    let audioBase64 = "";
-
-    document.getElementById("audio").onchange = function(){
-      const reader = new FileReader();
-      reader.onload = () => audioBase64 = reader.result;
-      reader.readAsDataURL(this.files[0]);
-    };
-
-    function addCard(){
-      const unitName = document.getElementById("unitName").value.trim();
-      const arabic = document.getElementById("arabic").value.trim();
-      const english = document.getElementById("english").value.trim();
-
-      if(!unitName || !arabic || !english || !audioBase64){
-        alert("⚠️ كمل كل البيانات");
-        return;
-      }
-
-      let units = JSON.parse(localStorage.getItem("units")) || [];
-
-      let unit = units.find(u => u.unitName === unitName);
-      if(!unit){
-        unit = { unitName, cards: [] };
-        units.push(unit);
-      }
-
-      unit.cards.push({
-        arabic,
-        english,
-        audio: audioBase64,
-        results: {}
-      });
-
-      localStorage.setItem("units", JSON.stringify(units));
-      alert("✅ تم إضافة البطاقة بنجاح!");
-
-      document.getElementById("unitName").value = "";
-      document.getElementById("arabic").value = "";
-      document.getElementById("english").value = "";
-      document.getElementById("audio").value = "";
-      audioBase64 = "";
-    }
-  </script>
 
 </body>
 </html>
