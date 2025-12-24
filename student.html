@@ -5,6 +5,148 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>صفحة الطالب</title>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+    import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA9WXBcRf8QBsRAafAcnKYVFx_kF5B0Gr0",
+      authDomain: "educate-a2aad.firebaseapp.com",
+      projectId: "educate-a2aad",
+      storageBucket: "educate-a2aad.firebasestorage.app",
+      messagingSenderId: "237633521728",
+      appId: "1:237633521728:web:1ec7e6aae3ae0711ef37a5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+      } else {
+        localStorage.setItem("userId", user.uid);
+        await loadUserName();
+        loadUnits();
+      }
+    });
+
+    async function loadUserName() {
+      const userId = localStorage.getItem("userId");
+      if (userId) {
+        const userDoc = await getDoc(doc(db, "users", userId));
+        if (userDoc.exists()) {
+          document.getElementById("userName").textContent = "مرحبا، " + (userDoc.data().displayName || "طالب");
+        }
+      }
+    }
+
+    async function loadUnits() {
+      const container = document.getElementById("units");
+      const noUnitsMsg = document.getElementById("noUnitsMsg");
+
+      try {
+        const querySnapshot = await getDocs(collection(db, "units"));
+
+        if (querySnapshot.empty) {
+          noUnitsMsg.style.display = "block";
+          return;
+        }
+
+        container.innerHTML = "";
+
+        querySnapshot.forEach((docSnap) => {
+          const unit = docSnap.data();
+          const unitId = docSnap.id;
+
+          // حساب الإحصائيات
+          const totalCards = unit.cards?.length || 0;
+          let completed = 0;
+          let totalAccuracy = 0;
+          const userId = localStorage.getItem("userId");
+
+          unit.cards?.forEach(card => {
+            if (card.results?.[userId]) {
+              completed++;
+              totalAccuracy += card.results[userId].accuracy || 0;
+            }
+          });
+
+          const progress = totalCards > 0 ? Math.round((completed / totalCards) * 100) : 0;
+          const avgAccuracy = completed > 0 ? Math.round(totalAccuracy / completed) : 0;
+
+          // اختيار أيقونة
+          let icon = "📖";
+          const unitNameLower = (unit.unitName || "").toLowerCase();
+
+          if (unitNameLower.includes("greeting") || unitNameLower.includes("تحية")) icon = "👋";
+          else if (unitNameLower.includes("food") || unitNameLower.includes("طعام")) icon = "🍔";
+          else if (unitNameLower.includes("family") || unitNameLower.includes("عائلة")) icon = "👨‍👩‍👧";
+          else if (unitNameLower.includes("travel") || unitNameLower.includes("سفر")) icon = "✈️";
+          else if (unitNameLower.includes("school") || unitNameLower.includes("مدرسة")) icon = "📚";
+          else if (unitNameLower.includes("colors") || unitNameLower.includes("ألوان")) icon = "🎨";
+          else if (unitNameLower.includes("numbers") || unitNameLower.includes("أرقام")) icon = "🔢";
+
+          const cardElement = document.createElement("div");
+          cardElement.className = "unit-card";
+
+          cardElement.innerHTML = `
+            <div style="padding: 20px; text-align: center;">
+              <div style="font-size: 48px; margin-bottom: 10px;">
+                ${icon}
+              </div>
+              <div style="font-size: 24px; font-weight: bold; margin-bottom: 12px;">
+                ${unit.unitName || "وحدة غير مسماة"}
+              </div>
+              <div style="font-size: 16px; color: #555; margin-bottom: 15px;">
+                ${totalCards} كلمة
+              </div>
+
+              <div style="margin: 15px 0; background: #eee; height: 10px; border-radius: 5px; overflow: hidden;">
+                <div style="width: ${progress}%; height: 100%; background: #27ae60; transition: width 0.5s;"></div>
+              </div>
+
+              <div style="font-size: 18px; font-weight: bold; color: #27ae60;">
+                أنجزت ${progress}%
+              </div>
+
+              ${avgAccuracy > 0 ? `
+                <div style="font-size: 14px; color: #555; margin-top: 8px;">
+                  متوسط الدقة: ${avgAccuracy}%
+                </div>
+              ` : ''}
+
+              <button style="margin-top: 20px; width: 100%; padding: 12px; font-size: 18px;">
+                ${progress === 100 ? 'راجع الوحدة' : 'ابدأ الآن'}
+              </button>
+            </div>
+          `;
+
+          cardElement.querySelector("button").onclick = () => {
+            localStorage.setItem("currentUnitId", unitId);
+            location.href = "cards.html";
+          };
+
+          container.appendChild(cardElement);
+        });
+      } catch (error) {
+        console.error("Error loading units:", error);
+        noUnitsMsg.textContent = "حدث خطأ أثناء تحميل الوحدات 😕";
+        noUnitsMsg.style.display = "block";
+      }
+    }
+
+    window.signOutUser = async () => {
+      await signOut(auth);
+      localStorage.removeItem("userId");
+      window.location.href = "login.html";
+    };
+  </script>
+
   <style>
     body {
       font-family: 'Tajawal', sans-serif;
@@ -13,8 +155,6 @@
       padding: 0;
       min-height: 100vh;
     }
-
-    /* Sidebar للديسكتوب فقط */
     .sidebar {
       width: 280px;
       background: white;
@@ -26,7 +166,6 @@
       overflow-y: auto;
       z-index: 100;
     }
-
     .sidebar-header {
       background: #D32F2F;
       color: white;
@@ -35,9 +174,7 @@
       font-size: 22px;
       font-weight: 700;
     }
-
     .sidebar-menu { padding: 20px 0; }
-
     .menu-item {
       display: flex;
       align-items: center;
@@ -47,26 +184,16 @@
       font-size: 18px;
       transition: all 0.3s;
     }
-
     .menu-item:hover { background: #f0f0f0; color: #D32F2F; }
-
     .menu-item.active { background: #D32F2F; color: white; font-weight: 700; }
-
     .menu-icon { font-size: 28px; margin-left: 16px; }
-
-    /* Main Content */
     .main-content {
       padding: 40px 20px;
       transition: margin-right 0.3s;
     }
-
-    /* للديسكتوب: Sidebar جانبي */
     @media (min-width: 769px) {
-      .main-content {
-        margin-right: 280px;
-      }
+      .main-content { margin-right: 280px; }
     }
-
     .page-title {
       text-align: center;
       font-size: 28px;
@@ -74,7 +201,13 @@
       color: #D32F2F;
       margin-bottom: 40px;
     }
-
+    #userName {
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      color: #D32F2F;
+      margin-bottom: 20px;
+    }
     .units-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -82,7 +215,6 @@
       max-width: 1400px;
       margin: 0 auto;
     }
-
     .unit-card {
       background: white;
       border-radius: 20px;
@@ -91,29 +223,10 @@
       transition: all 0.3s ease;
       cursor: pointer;
     }
-
     .unit-card:hover {
       transform: translateY(-8px);
       box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
     }
-
-    .unit-card button {
-      width: 100%;
-      padding: 50px 20px;
-      font-size: 22px;
-      font-weight: 700;
-      background: #D32F2F;
-      color: white;
-      border: none;
-      border-radius: 20px;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-
-    .unit-card button:hover {
-      background: #b71c1c;
-    }
-
     .no-units {
       text-align: center;
       font-size: 20px;
@@ -121,8 +234,6 @@
       margin-top: 80px;
       line-height: 1.8;
     }
-
-    /* Bottom Navigation للموبايل والتابلت */
     .bottom-nav {
       display: none;
       position: fixed;
@@ -136,7 +247,6 @@
       justify-content: space-around;
       z-index: 1000;
     }
-
     .bottom-nav a {
       text-align: center;
       color: #999;
@@ -144,120 +254,63 @@
       text-decoration: none;
       flex: 1;
     }
-
     .bottom-nav a.active {
       color: #D32F2F;
       font-weight: 700;
     }
-
     .bottom-nav .nav-icon {
       font-size: 28px;
       display: block;
       margin-bottom: 4px;
     }
-
-    /* Responsive */
     @media (max-width: 768px) {
-      .sidebar {
-        display: none; /* إخفاء الـ Sidebar الجانبي */
-      }
-
-      .main-content {
-        padding-bottom: 80px; /* مساحة للـ bottom nav */
-      }
-
-      .bottom-nav {
-        display: flex;
-      }
-
-      .units-grid {
-        grid-template-columns: 1fr;
-        gap: 20px;
-      }
-
-      .unit-card button {
-        padding: 45px 20px;
-        font-size: 21px;
-      }
-
-      .page-title {
-        font-size: 24px;
-        margin-bottom: 30px;
-      }
-
-      .unit-card:hover {
-        transform: none;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .page-title {
-        font-size: 22px;
-      }
-
-      .unit-card button {
-        padding: 40px 15px;
-        font-size: 20px;
-      }
+      .sidebar { display: none; }
+      .main-content { padding-bottom: 80px; }
+      .bottom-nav { display: flex; }
+      .units-grid { grid-template-columns: 1fr; gap: 20px; }
+      .page-title { font-size: 24px; margin-bottom: 30px; }
+      .unit-card:hover { transform: none; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Sidebar للديسكتوب -->
   <div class="sidebar">
     <div class="sidebar-header">📚 لوحة التحكم</div>
     <div class="sidebar-menu">
-      <a href="index.html" class="menu-item"><span class="menu-icon">👨‍🏫</span> لوحة المدرس</a>
-      <a href="student.html" class="menu-item active"><span class="menu-icon">👨‍🎓</span> صفحة الطالب</a>
-      <a href="cards.html" class="menu-item"><span class="menu-icon">🃏</span> البطاقات</a>
+      <a href="index.html" class="menu-item">
+        <span class="menu-icon">👨‍🏫</span>
+        لوحة المدرس
+      </a>
+      <a href="student.html" class="menu-item active">
+        <span class="menu-icon">👨‍🎓</span>
+        صفحة الطالب
+      </a>
+      <a href="cards.html" class="menu-item">
+        <span class="menu-icon">🃏</span>
+        البطاقات
+      </a>
+      <a href="#" onclick="signOutUser(); return false;" class="menu-item">
+        <span class="menu-icon">🚪</span>
+        خروج
+      </a>
     </div>
   </div>
 
-  <!-- Bottom Navigation للموبايل -->
   <div class="bottom-nav">
-    <a href="admin.html"><span class="nav-icon">👨‍🏫</span> لوحة المدرس</a>
+    <a href="index.html"><span class="nav-icon">👨‍🏫</span> لوحة المدرس</a>
     <a href="student.html" class="active"><span class="nav-icon">👨‍🎓</span> الطالب</a>
     <a href="cards.html"><span class="nav-icon">🃏</span> البطاقات</a>
   </div>
 
-  <!-- Main Content -->
   <div class="main-content">
-    <h1 class="page-title">📚 اختر الوحدة</h1>
-
+    <h1 id="userName" class="page-title">مرحبا، طالب</h1>
     <div class="units-grid" id="units"></div>
-
     <div class="no-units" id="noUnitsMsg" style="display:none;">
       لا توجد وحدات متاحة حالياً 😔<br>
       اطلب من المدرس إضافة وحدات جديدة
     </div>
   </div>
-
-  <script>
-    const units = JSON.parse(localStorage.getItem("units")) || [];
-    const container = document.getElementById("units");
-    const noUnitsMsg = document.getElementById("noUnitsMsg");
-
-    if (units.length === 0) {
-      noUnitsMsg.style.display = "block";
-    } else {
-      units.forEach((u, i) => {
-        const card = document.createElement("div");
-        card.className = "unit-card";
-
-        const btn = document.createElement("button");
-        btn.textContent = u.unitName;
-
-        btn.onclick = () => {
-          localStorage.setItem("currentUnit", i);
-          location.href = "cards.html";
-        };
-
-        card.appendChild(btn);
-        container.appendChild(card);
-      });
-    }
-  </script>
 
 </body>
 </html>
