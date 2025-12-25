@@ -636,7 +636,6 @@
       recognition.start();
       
       recognition.onresult = async (event) => {
-        const spoken = event.results[0][0].transcript.trim();
         const correct = cards[index].english;
         const acc = calculateAccuracy(spoken, correct);
         const grade = getGrade(acc);
@@ -708,3 +707,4 @@
   </script>
 </body>
 </html>
+
