@@ -7,6 +7,163 @@
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
+  <!-- Firebase SDKs -->
+  <script type="module">
+    // يفضل تحميل SDKs من CDN مع type=module
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import { 
+      getAuth, 
+      signInWithEmailAndPassword, 
+      createUserWithEmailAndPassword,
+      GoogleAuthProvider,
+      signInWithPopup,
+      onAuthStateChanged 
+    } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA9WXBcRf8QBsRAafAcnKYVFx_kF5B0Gr0",
+      authDomain: "educate-a2aad.firebaseapp.com",
+      projectId: "educate-a2aad",
+      storageBucket: "educate-a2aad.firebasestorage.app",
+      messagingSenderId: "237633521728",
+      appId: "1:237633521728:web:1ec7e6aae3ae0711ef37a5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const googleProvider = new GoogleAuthProvider();
+
+    let isLoginMode = true;
+
+    // DOM Elements
+    const mainBtn = document.getElementById("mainBtn");
+    const toggleText = document.getElementById("toggleText");
+    const nameGroup = document.getElementById("nameGroup");
+    const errorMsg = document.getElementById("errorMsg");
+
+    // مراقبة حالة المستخدم
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        try {
+          const userDocRef = doc(db, "users", user.uid);
+          const userDoc = await getDoc(userDocRef);
+          
+          let displayName = user.displayName || "طالب";
+
+          if (!userDoc.exists()) {
+            // إنشاء مستند جديد إذا لم يكن موجود (حالة Google Sign-in جديد)
+            await setDoc(userDocRef, {
+              displayName: displayName,
+              email: user.email,
+              role: "student",
+              createdAt: new Date().toISOString(),
+              photoURL: user.photoURL || null
+            });
+          } else {
+            displayName = userDoc.data().displayName || displayName;
+          }
+
+          localStorage.setItem("displayName", displayName);
+          window.location.href = "student.html";
+        } catch (e) {
+          console.error("خطأ في معالجة المستخدم:", e);
+          localStorage.setItem("displayName", "طالب");
+          window.location.href = "student.html";
+        }
+      }
+    });
+
+    // تبديل بين تسجيل الدخول وإنشاء حساب
+    function toggleMode() {
+      isLoginMode = !isLoginMode;
+      if (isLoginMode) {
+        mainBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> تسجيل الدخول';
+        toggleText.textContent = "ليس لديك حساب؟ اضغط هنا";
+        nameGroup.style.display = "none";
+      } else {
+        mainBtn.innerHTML = '<i class="fas fa-user-plus"></i> إنشاء حساب';
+        toggleText.textContent = "لديك حساب؟ سجل دخولك";
+        nameGroup.style.display = "block";
+      }
+      errorMsg.textContent = "";
+    }
+
+    // معالجة تسجيل الدخول / إنشاء حساب
+    window.handleSubmit = async () => {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      const name = document.getElementById("name").value.trim();
+
+      errorMsg.textContent = "";
+
+      if (!email || (!isLoginMode && !password)) {
+        errorMsg.textContent = "املأ الإيميل" + (isLoginMode ? " وكلمة المرور" : "");
+        return;
+      }
+
+      if (!isLoginMode) {
+        if (!name) {
+          errorMsg.textContent = "الاسم مطلوب";
+          return;
+        }
+        if (password.length < 6) {
+          errorMsg.textContent = "كلمة المرور لازم 6 أحرف على الأقل";
+          return;
+        }
+      }
+
+      try {
+        let user;
+
+        if (isLoginMode) {
+          const credential = await signInWithEmailAndPassword(auth, email, password);
+          user = credential.user;
+        } else {
+          const credential = await createUserWithEmailAndPassword(auth, email, password);
+          user = credential.user;
+
+          await setDoc(doc(db, "users", user.uid), {
+            displayName: name,
+            email: user.email,
+            role: "student",
+            createdAt: new Date().toISOString()
+          });
+
+          alert("تم إنشاء الحساب بنجاح!");
+        }
+
+        // حفظ الاسم مؤقتاً
+        localStorage.setItem("displayName", isLoginMode ? "طالب" : name);
+        // الانتقال سيتم تلقائياً عن طريق onAuthStateChanged
+      } catch (error) {
+        console.error("Auth error:", error);
+        let msg = error.message;
+
+        if (error.code === "auth/email-already-in-use") msg = "الإيميل مستخدم بالفعل";
+        else if (error.code === "auth/invalid-email") msg = "الإيميل غير صالح";
+        else if (error.code === "auth/weak-password") msg = "كلمة المرور ضعيفة جداً";
+        else if (error.code === "auth/wrong-password") msg = "كلمة المرور غير صحيحة";
+        else if (error.code === "auth/user-not-found") msg = "حساب غير موجود";
+
+        errorMsg.textContent = msg;
+      }
+    };
+
+    // تسجيل الدخول بجوجل
+    window.signInWithGoogle = async () => {
+      try {
+        const result = await signInWithPopup(auth, googleProvider);
+        const user = result.user;
+        // باقي المعالجة في onAuthStateChanged
+      } catch (error) {
+        console.error("Google Sign-In Error:", error);
+        errorMsg.textContent = "فشل تسجيل الدخول بجوجل: " + (error.message || "جرب تاني");
+      }
+    };
+  </script>
+
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
     body {
@@ -16,7 +173,6 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      position: relative;
     }
 
     .login-container {
@@ -26,75 +182,71 @@
       box-shadow: 0 25px 80px rgba(0,0,0,0.3);
       width: 100%;
       max-width: 460px;
-      padding: 60px 50px;
+      padding: 55px 45px;
       text-align: center;
-      border: 1px solid rgba(255,255,255,0.4);
     }
 
     .logo { font-size: 52px; margin-bottom: 10px; color: #D32F2F; }
-    h1 { color: #111; font-size: 32px; margin-bottom: 8px; }
-    .subtitle { color: #555; font-size: 17px; margin-bottom: 40px; }
+    h1 { font-size: 30px; margin-bottom: 8px; color: #111; }
+    .subtitle { color: #555; margin-bottom: 35px; font-size: 16px; }
 
     .input-group {
       position: relative;
-      margin-bottom: 28px;
+      margin-bottom: 25px;
     }
 
     .input-group i {
       position: absolute;
-      right: 20px;
+      right: 18px;
       top: 50%;
       transform: translateY(-50%);
       color: #777;
-      font-size: 20px;
     }
 
     input {
       width: 100%;
-      padding: 18px 20px 18px 55px;
+      padding: 16px 18px 16px 50px;
       border: 2px solid #ddd;
-      border-radius: 16px;
-      font-size: 17px;
+      border-radius: 14px;
+      font-size: 16px;
       transition: all 0.3s;
     }
 
     input:focus {
       border-color: #D32F2F;
-      box-shadow: 0 0 0 4px rgba(211,47,47,0.2);
+      box-shadow: 0 0 0 3px rgba(211,47,47,0.2);
       outline: none;
     }
 
     .btn {
       width: 100%;
-      padding: 18px;
+      padding: 16px;
       margin: 12px 0;
       border: none;
-      border-radius: 16px;
-      font-size: 18px;
+      border-radius: 14px;
+      font-size: 17px;
       font-weight: 700;
       cursor: pointer;
       transition: all 0.3s;
     }
 
-    .btn-primary {
-      background: linear-gradient(135deg, #D32F2F, #b71c1c);
+    .btn-primary { background: #D32F2F; color: white; }
+    .btn-primary:hover { background: #b71c1c; transform: translateY(-2px); }
+
+    .btn-google {
+      background: #4285F4;
       color: white;
-      box-shadow: 0 10px 30px rgba(211,47,47,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
     }
 
-    .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 20px 50px rgba(211,47,47,0.6); }
-
-    .btn-secondary {
-      background: white;
-      color: #D32F2F;
-      border: 2px solid #D32F2F;
-    }
-
-    .btn-secondary:hover { background: #fff5f5; transform: translateY(-3px); }
+    .btn-google:hover { background: #3267d6; transform: translateY(-2px); }
 
     .toggle {
       margin-top: 25px;
-      font-size: 16px;
+      font-size: 15px;
       color: #444;
     }
 
@@ -106,8 +258,8 @@
 
     .error-msg {
       color: #D32F2F;
-      font-size: 15px;
-      margin: 15px 0;
+      font-size: 14px;
+      margin: 12px 0;
       min-height: 20px;
     }
   </style>
@@ -129,7 +281,7 @@
       <input type="email" id="email" placeholder="البريد الإلكتروني" required>
     </div>
 
-    <div class="input-group">
+    <div class="input-group" id="passwordGroup">
       <i class="fas fa-lock"></i>
       <input type="password" id="password" placeholder="كلمة المرور" required>
     </div>
@@ -140,148 +292,14 @@
       <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
     </button>
 
-    <button class="btn btn-secondary" onclick="toggleMode()">
-      <i class="fas fa-user-plus"></i> إنشاء حساب جديد
+    <button class="btn btn-google" onclick="signInWithGoogle()">
+      <i class="fab fa-google"></i> الدخول بجوجل
     </button>
 
     <div class="toggle">
-      <span id="toggleText">ليس لديك حساب؟ اضغط هنا</span>
+      <span id="toggleText" onclick="toggleMode()">ليس لديك حساب؟ إنشاء حساب جديد</span>
     </div>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyA9WXBcRf8QBsRAafAcnKYVFx_kF5B0Gr0",
-      authDomain: "educate-a2aad.firebaseapp.com",
-      projectId: "educate-a2aad",
-      storageBucket: "educate-a2aad.firebasestorage.app",
-      messagingSenderId: "237633521728",
-      appId: "1:237633521728:web:1ec7e6aae3ae0711ef37a5"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-  let isLoginMode = true;
-const mainBtn = document.getElementById("mainBtn");
-const toggleText = document.getElementById("toggleText");
-const nameGroup = document.getElementById("nameGroup");
-const errorMsg = document.getElementById("errorMsg");
-
-onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    try {
-      const userDoc = await getDoc(doc(db, "users", user.uid));
-      const displayName = userDoc.exists() ? userDoc.data().displayName || "طالب" : "طالب";
-      localStorage.setItem("displayName", displayName);
-      window.location.href = "student.html";
-    } catch (e) {
-      console.error("خطأ في جلب الاسم:", e);
-      localStorage.setItem("displayName", "طالب");
-      window.location.href = "student.html";
-    }
-  }
-});
-
-function toggleMode() {
-  isLoginMode = !isLoginMode;
-  if (isLoginMode) {
-    mainBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> تسجيل الدخول';
-    toggleText.textContent = "ليس لديك حساب؟ اضغط هنا";
-    nameGroup.style.display = "none";
-  } else {
-    mainBtn.innerHTML = '<i class="fas fa-user-plus"></i> إنشاء حساب';
-    toggleText.textContent = "لديك حساب؟ سجل دخولك";
-    nameGroup.style.display = "block";
-  }
-  errorMsg.textContent = "";
-}
-
-window.handleSubmit = async () => {
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
-  const name = document.getElementById("name").value.trim();
-
-  errorMsg.textContent = "";
-
-  // التحقق من الحقول
-  if (!email || !password) {
-    errorMsg.textContent = "املأ الإيميل وكلمة المرور";
-    return;
-  }
-
-  if (!isLoginMode) {
-    if (!name) {
-      errorMsg.textContent = "الاسم مطلوب عند إنشاء حساب جديد";
-      return;
-    }
-    if (password.length < 6) {
-      errorMsg.textContent = "كلمة المرور لازم تكون 6 أحرف على الأقل";
-      return;
-    }
-  }
-
-  try {
-    let user;
-
-    if (isLoginMode) {
-      // تسجيل الدخول
-      const credential = await signInWithEmailAndPassword(auth, email, password);
-      user = credential.user;
-    } else {
-      // إنشاء حساب جديد
-      const credential = await createUserWithEmailAndPassword(auth, email, password);
-      user = credential.user;
-
-      // حفظ بيانات المستخدم في Firestore
-      await setDoc(doc(db, "users", user.uid), {
-        displayName: name,
-        email: user.email,
-        role: "student",
-        createdAt: new Date().toISOString()
-      });
-
-      alert("تم إنشاء الحساب بنجاح! جاري توجيهك...");
-    }
-
-    // حفظ الاسم في localStorage (للاستخدام في الصفحات الأخرى)
-    localStorage.setItem("displayName", isLoginMode ? name || "طالب" : name);
-
-    // الانتقال لصفحة الطالب
-    window.location.href = "student.html";
-  } catch (error) {
-    console.error("خطأ في التسجيل:", error);
-
-    let msg = "حدث خطأ، جرب تاني";
-    switch (error.code) {
-      case "auth/email-already-in-use":
-        msg = "الإيميل مستخدم بالفعل";
-        break;
-      case "auth/invalid-email":
-        msg = "الإيميل غير صالح";
-        break;
-      case "auth/weak-password":
-        msg = "كلمة المرور ضعيفة جداً";
-        break;
-      case "auth/wrong-password":
-        msg = "كلمة المرور غير صحيحة";
-        break;
-      case "auth/user-not-found":
-        msg = "الإيميل غير مسجل";
-        break;
-      default:
-        msg = error.message;
-    }
-
-    errorMsg.textContent = msg;
-  }
-};
-  </script>
 </body>
 </html>
-
