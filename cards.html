@@ -1,298 +1,197 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>عرض البطاقات</title>
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<meta charset="UTF-8">
+<title>البطاقات</title>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+<style>
+body{
+  font-family:Arial;
+  background:#f2f2f2;
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+}
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyA9WXBcRf8QBsRAafAcnKYVFx_kF5B0Gr0",
-      authDomain: "educate-a2aad.firebaseapp.com",
-      projectId: "educate-a2aad",
-      storageBucket: "educate-a2aad.firebasestorage.app",
-      messagingSenderId: "237633521728",
-      appId: "1:237633521728:web:1ec7e6aae3ae0711ef37a5"
-    };
+.card{
+  width:260px;
+  height:170px;
+  perspective:1000px;
+  cursor:pointer;
+}
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+.card-inner{
+  width:100%;
+  height:100%;
+  position:relative;
+  transition:transform 0.6s;
+  transform-style:preserve-3d;
+}
 
-    let cards = [];
-    let index = 0;
-    let audio = null;
-    const unitId = localStorage.getItem("currentUnitId");
+.card.flip .card-inner{
+  transform:rotateY(180deg);
+}
 
-    const unitTitle = document.getElementById("unitTitle");
-    const front = document.getElementById("front");
-    const back = document.getElementById("back");
-    const cardDiv = document.getElementById("card");
-    const resultDiv = document.getElementById("result");
-    const progress = document.getElementById("progress");
-    const progressFill = document.getElementById("progressFill");
-    const avgDiv = document.getElementById("average");
+.card-face{
+  position:absolute;
+  width:100%;
+  height:100%;
+  backface-visibility:hidden;
+  border-radius:18px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  font-size:24px;
+  color:white;
+}
 
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = SpeechRecognition ? new SpeechRecognition() : null;
-    if (recognition) recognition.lang = "en-US";
+.front{ background:#4da6ff; }
+.back{
+  background:#2ecc71;
+  transform:rotateY(180deg);
+}
 
-    onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        window.location.href = "login.html";
-      } else {
-        localStorage.setItem("userId", user.uid);
-        loadUnit();
-      }
-    });
+button{
+  margin:5px;
+  padding:8px 14px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+}
 
-    async function loadUnit() {
-      if (!unitId) {
-        document.body.innerHTML = "<h2 style='text-align:center;margin-top:50px;color:#D32F2F;'>⚠️ اختر وحدة أولاً</h2>";
-        return;
-      }
-
-      try {
-        const unitRef = doc(db, "units", unitId);
-        const unitSnap = await getDoc(unitRef);
-
-        if (!unitSnap.exists()) {
-          document.body.innerHTML = "<h2 style='text-align:center;margin-top:50px;color:#D32F2F;'>⚠️ الوحدة غير موجودة</h2>";
-          return;
-        }
-
-        const data = unitSnap.data();
-        cards = data.cards || [];
-        unitTitle.textContent = data.unitName || "وحدة غير معروفة";
-
-        if (cards.length === 0) {
-          progress.textContent = "لا توجد بطاقات في هذه الوحدة";
-          return;
-        }
-
-        loadCard();
-
-        cardDiv.addEventListener("click", flipCard);
-
-        const soundBtn = document.querySelector('.back-buttons button:first-child');
-        const micBtn = document.querySelector('.back-buttons button:last-child');
-
-        if (soundBtn) soundBtn.addEventListener("click", playSound);
-        if (micBtn) micBtn.addEventListener("click", startPronunciation);
-
-        document.getElementById("prevBtn")?.addEventListener("click", prevCard);
-        document.getElementById("nextBtn")?.addEventListener("click", nextCard);
-      } catch (error) {
-        console.error("Error loading unit:", error);
-        document.body.innerHTML = "<h2 style='text-align:center;margin-top:50px;color:#D32F2F;'>حدث خطأ</h2>";
-      }
-    }
-
-    function updateProgress() {
-      if (cards.length === 0) return;
-      const percent = ((index + 1) / cards.length) * 100;
-      progressFill.style.width = percent + "%";
-      progress.textContent = `البطاقة ${index + 1} من ${cards.length}`;
-    }
-
-    function loadCard() {
-      if (cards.length === 0) return;
-      cardDiv.classList.remove("flip");
-      front.textContent = cards[index].arabic;
-      back.textContent = cards[index].english;
-      audio = new Audio(cards[index].audio);
-      resultDiv.textContent = "";
-      updateProgress();
-    }
-
-    function flipCard() {
-      cardDiv.classList.toggle("flip");
-    }
-
-    function nextCard() {
-      index = (index + 1) % cards.length;
-      loadCard();
-    }
-
-    function prevCard() {
-      index = (index - 1 + cards.length) % cards.length;
-      loadCard();
-    }
-
-    function playSound(e) {
-      e.stopPropagation();
-      if (audio) audio.play();
-    }
-
-    function calculateAccuracy(spoken, correct) {
-      spoken = spoken.toLowerCase().trim();
-      correct = correct.toLowerCase().trim();
-      if (spoken === correct) return 100;
-
-      let match = 0;
-      for (let i = 0; i < Math.min(spoken.length, correct.length); i++) {
-        if (spoken[i] === correct[i]) match++;
-      }
-      return Math.round((match / correct.length) * 100);
-    }
-
-    function getGrade(acc) {
-      if (acc >= 90) return "ممتاز ⭐";
-      if (acc >= 75) return "جيد 👍";
-      return "يحتاج تحسين ❌";
-    }
-
-    async function startPronunciation(e) {
-      if (!recognition) {
-        resultDiv.textContent = "المتصفح لا يدعم التعرف على الصوت";
-        return;
-      }
-
-      e.stopPropagation();
-      resultDiv.textContent = "🎙️ جاري الاستماع...";
-      recognition.start();
-
-      recognition.onresult = async (event) => {
-        const spoken = event.results[0][0].transcript.trim();
-        const correct = cards[index].english;
-        const acc = calculateAccuracy(spoken, correct);
-        const grade = getGrade(acc);
-
-        try {
-          const unitRef = doc(db, "units", unitId);
-          const userId = localStorage.getItem("userId");
-          const field = `cards.${index}.results.${userId}`;
-
-          await updateDoc(unitRef, {
-            [field]: {
-              accuracy: acc,
-              grade,
-              spoken,
-              timestamp: new Date().toISOString()
-            }
-          });
-
-          resultDiv.innerHTML = `
-            قلت: "<strong>${spoken}</strong>"<br>
-            الدقة: <strong>${acc}%</strong><br>
-            التقييم: <strong>${grade}</strong>
-          `;
-        } catch (error) {
-          console.error("Error saving result:", error);
-          resultDiv.textContent = "خطأ في حفظ النتيجة";
-        }
-      };
-
-      recognition.onerror = () => {
-        resultDiv.textContent = "❌ خطأ في التعرف على الصوت، جرب تاني";
-      };
-    }
-
-    window.signOutUser = async () => {
-      await signOut(auth);
-      localStorage.removeItem("userId");
-      localStorage.removeItem("currentUnitId");
-      window.location.href = "login.html";
-    };
-  </script>
-
-  <style>
-    body { font-family: 'Tajawal', sans-serif; background: #f5f5f5; margin: 0; padding: 0; min-height: 100vh; display: flex; }
-    .sidebar { width: 280px; background: white; box-shadow: 4px 0 20px rgba(0,0,0,0.1); position: fixed; top: 0; bottom: 0; right: 0; overflow-y: auto; z-index: 100; }
-    .sidebar-header { background: #D32F2F; color: white; padding: 30px 20px; text-align: center; font-size: 22px; font-weight: 700; }
-    .sidebar-menu { padding: 20px 0; }
-    .menu-item { display: flex; align-items: center; padding: 18px 30px; color: #555; text-decoration: none; font-size: 18px; transition: all 0.3s; }
-    .menu-item:hover { background: #f0f0f0; color: #D32F2F; }
-    .menu-item.active { background: #D32F2F; color: white; font-weight: 700; }
-    .menu-icon { font-size: 28px; margin-left: 16px; }
-    .main-content { flex: 1; padding: 40px; margin-right: 280px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-    .unit-title { font-size: 28px; font-weight: 700; color: #D32F2F; margin-bottom: 20px; }
-    #progress { font-size: 22px; color: #555; margin-bottom: 30px; }
-    .progress-bar { width: 380px; max-width: 90%; height: 8px; background: #eee; border-radius: 4px; overflow: hidden; margin: 20px 0; }
-    .progress-fill { height: 100%; background: #D32F2F; width: 0%; transition: width 0.4s ease; }
-    .card-container { width: 420px; max-width: 95%; perspective: 1200px; margin: 20px 0; }
-    .card { width: 100%; height: 500px; position: relative; transform-style: preserve-3d; transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55); cursor: pointer; border-radius: 28px; box-shadow: 0 15px 50px rgba(0,0,0,0.2); }
-    .card.flip { transform: rotateY(180deg); }
-    .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 28px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; box-sizing: border-box; font-size: 36px; font-weight: 700; color: white; text-align: center; }
-    .front { background: #D32F2F; }
-    .back { background: #27ae60; transform: rotateY(180deg); }
-    .back-content { width: 100%; text-align: center; }
-    .back-buttons { margin-top: 40px; display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; }
-    .back-buttons button { padding: 18px 32px; font-size: 20px; border: none; border-radius: 20px; background: white; color: #333; cursor: pointer; transition: all 0.3s; box-shadow: 0 8px 20px rgba(0,0,0,0.15); font-weight: 600; display: flex; align-items: center; gap: 12px; }
-    .back-buttons button i { font-size: 26px; }
-    .back-buttons button:hover { transform: translateY(-6px); box-shadow: 0 15px 30px rgba(0,0,0,0.25); }
-    #result { margin-top: 30px; font-size: 20px; line-height: 1.6; min-height: 60px; }
-    .controls { display: flex; gap: 50px; margin-top: 40px; }
-    .controls button { width: 80px; height: 80px; font-size: 42px; border: none; border-radius: 50%; background: #D32F2F; color: white; cursor: pointer; box-shadow: 0 10px 30px rgba(211, 47, 47, 0.35); transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; }
-    .controls button:hover { background: #b71c1c; transform: scale(1.2); box-shadow: 0 15px 40px rgba(211, 47, 47, 0.5); }
-    .controls button:active { transform: scale(1.1); }
-    #average { font-size: 20px; color: #333; margin-top: 40px; font-weight: 600; }
-    @media (max-width: 768px) {
-      .sidebar { width: 100%; height: auto; position: relative; box-shadow: none; }
-      .main-content { margin-right: 0; padding: 20px; }
-      body { flex-direction: column; }
-      .card-container { width: 380px; height: 460px; }
-      .card-face { font-size: 30px; padding: 30px; }
-      .controls button { width: 70px; height: 70px; font-size: 38px; }
-      .back-buttons button { padding: 16px 28px; font-size: 18px; }
-    }
-  </style>
+.controls{ margin-top:20px; }
+</style>
 </head>
+
 <body>
 
-  <div class="sidebar">
-    <div class="sidebar-header">📚 لوحة التحكم</div>
-    <div class="sidebar-menu">
-      <a href="index.html" class="menu-item"><span class="menu-icon">👨‍🏫</span> لوحة المدرس</a>
-      <a href="student.html" class="menu-item"><span class="menu-icon">👨‍🎓</span> صفحة الطالب</a>
-      <a href="cards.html" class="menu-item active"><span class="menu-icon">🃏</span> عرض البطاقات</a>
-      <a href="#" onclick="signOutUser(); return false;" class="menu-item">
-        <span class="menu-icon">🚪</span> خروج
-      </a>
+<h3 id="progress"></h3>
+
+<div class="card" id="card" onclick="flipCard()">
+  <div class="card-inner">
+    <div class="card-face front" id="front"></div>
+    <div class="card-face back">
+      <div id="back"></div>
+      <button onclick="playSound(event)">🔊</button>
+      <button onclick="startPronunciation(event)">🎤</button>
+      <div id="result"></div>
     </div>
   </div>
+</div>
 
-  <div class="main-content">
-    <h2 class="unit-title" id="unitTitle"></h2>
-    <h3 id="progress"></h3>
+<div class="controls">
+  <button onclick="prevCard()">⬅️</button>
+  <button onclick="nextCard()">➡️</button>
+</div>
 
-    <div class="card-container">
-      <div class="card" id="card">
-        <div class="card-face front" id="front"></div>
-        <div class="card-face back">
-          <div class="back-content">
-            <div id="back"></div>
-            <div class="back-buttons">
-              <button>
-                <i class="fas fa-volume-high"></i> تشغيل الصوت
-              </button>
-              <button>
-                <i class="fas fa-microphone"></i> نطق الكلمة
-              </button>
-            </div>
-            <div id="result"></div>
-          </div>
-        </div>
-      </div>
-    </div>
+<h4 id="average"></h4>
 
-    <div class="progress-bar">
-      <div class="progress-fill" id="progressFill"></div>
-    </div>
+<script>
+const student = "student1"; // MVP
+let units = JSON.parse(localStorage.getItem("units")) || [];
+let unitIndex = localStorage.getItem("currentUnit");
+let cards = units[unitIndex].cards;
 
-    <div class="controls">
-      <button id="prevBtn"><i class="fas fa-chevron-left"></i></button>
-      <button id="nextBtn"><i class="fas fa-chevron-right"></i></button>
-    </div>
+let index = 0;
+let audio;
 
-    <h4 id="average"></h4>
-  </div>
+const front = document.getElementById("front");
+const back = document.getElementById("back");
+const cardDiv = document.getElementById("card");
+const resultDiv = document.getElementById("result");
+const progress = document.getElementById("progress");
+const avgDiv = document.getElementById("average");
+
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const recognition = new SpeechRecognition();
+recognition.lang = "en-US";
+
+function loadCard(){
+  cardDiv.classList.remove("flip");
+  front.textContent = cards[index].arabic;
+  back.textContent = cards[index].english;
+  audio = new Audio(cards[index].audio);
+  resultDiv.textContent = "";
+  progress.textContent = `(${index+1} / ${cards.length})`;
+  showAverage();
+}
+
+function flipCard(){
+  cardDiv.classList.toggle("flip");
+}
+
+function nextCard(){
+  index = (index+1) % cards.length;
+  loadCard();
+}
+
+function prevCard(){
+  index = (index-1+cards.length) % cards.length;
+  loadCard();
+}
+
+function playSound(e){
+  e.stopPropagation();
+  audio.play();
+}
+
+function calculateAccuracy(spoken, correct){
+  let match = 0;
+  for(let i=0;i<correct.length;i++){
+    if(spoken[i] === correct[i]) match++;
+  }
+  let acc = Math.round((match / correct.length) * 100);
+  return acc;
+}
+
+function getGrade(acc){
+  if(acc >= 90) return "Excellent ⭐";
+  if(acc >= 75) return "Good 👍";
+  return "Poor ❌";
+}
+
+function startPronunciation(e){
+  e.stopPropagation();
+  resultDiv.textContent = "🎙️ اسمعك...";
+  recognition.start();
+
+  recognition.onresult = (event)=>{
+    const spoken = event.results[0][0].transcript.toLowerCase().trim();
+    const correct = cards[index].english.toLowerCase();
+    const acc = calculateAccuracy(spoken, correct);
+    const grade = getGrade(acc);
+
+    cards[index].results[student] = { accuracy: acc, grade };
+    localStorage.setItem("units", JSON.stringify(units));
+
+    resultDiv.innerHTML =
+      `قلت: "${spoken}"<br>
+       الصحة: ${acc}%<br>
+       التقييم: ${grade}`;
+    showAverage();
+  };
+}
+
+function showAverage(){
+  let total = 0, count = 0;
+  units.forEach(u=>{
+    u.cards.forEach(c=>{
+      if(c.results[student]){
+        total += c.results[student].accuracy;
+        count++;
+      }
+    });
+  });
+  avgDiv.textContent = count
+    ? `📊 متوسط أدائك: ${Math.round(total/count)}%`
+    : "";
+}
+
+loadCard();
+</script>
 
 </body>
 </html>
