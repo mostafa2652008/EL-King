@@ -6,6 +6,466 @@
   <title>عرض البطاقات</title>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Tajawal', sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Sidebar - نفس الستايل الجديد */
+    .sidebar {
+      width: 280px;
+      height: 100vh;
+      background: linear-gradient(180deg, #D32F2F 0%, #b71c1c 100%);
+      position: fixed;
+      top: 0;
+      right: 0;
+      box-shadow: -8px 0 30px rgba(211,47,47,0.3);
+      z-index: 1000;
+      overflow-y: auto;
+    }
+    .sidebar-header {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      color: white;
+      padding: 25px 20px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: 700;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+    .sidebar-menu { padding: 10px 0; }
+    .menu-item {
+      display: flex;
+      align-items: center;
+      padding: 16px 25px;
+      color: rgba(255,255,255,0.9);
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      border-right: 4px solid transparent;
+      margin: 2px 10px;
+      border-radius: 15px 0 0 15px;
+    }
+    .menu-item:hover {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border-right-color: #fff;
+      transform: translateX(-5px);
+    }
+    .menu-item.active {
+      background: rgba(255,255,255,0.25);
+      color: white;
+      border-right-color: #FFEBEE;
+      font-weight: 700;
+    }
+    .menu-icon {
+      font-size: 22px;
+      margin-left: 15px;
+      width: 25px;
+    }
+
+    /* Main Content */
+    .main-content {
+      margin-right: 280px;
+      padding: 40px 30px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 60px;
+    }
+
+    .page-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .unit-title {
+      font-size: 32px;
+      font-weight: 700;
+      color: #D32F2F;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .progress-text {
+      font-size: 20px;
+      color: #555;
+      font-weight: 500;
+      margin-bottom: 30px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      max-width: 500px;
+      height: 12px;
+      background: rgba(255,255,255,0.7);
+      border-radius: 20px;
+      overflow: hidden;
+      margin: 25px auto;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #D32F2F, #FF5722);
+      border-radius: 20px;
+      width: 0%;
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 0 20px rgba(211,47,47,0.4);
+    }
+
+    /* Card Container */
+    .card-container {
+      width: 100%;
+      max-width: 480px;
+      height: 550px;
+      perspective: 1400px;
+      margin: 40px 0;
+    }
+
+    .card {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.9s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      cursor: pointer;
+      border-radius: 32px;
+      box-shadow: 0 25px 70px rgba(0,0,0,0.25);
+    }
+
+    .card.flip {
+      transform: rotateY(180deg);
+    }
+
+    .card-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 50px 40px;
+      box-sizing: border-box;
+      font-size: 44px;
+      font-weight: 800;
+      color: white;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      backdrop-filter: blur(15px);
+    }
+
+    .front {
+      background: linear-gradient(135deg, #D32F2F 0%, #b71c1c 100%);
+    }
+
+    .back {
+      background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+      transform: rotateY(180deg);
+    }
+
+    .back-content {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .back-buttons {
+      margin-top: 35px;
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .back-buttons button {
+      padding: 20px 35px;
+      font-size: 18px;
+      border: none;
+      border-radius: 25px;
+      background: rgba(255,255,255,0.95);
+      color: #333;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: 'Tajawal', sans-serif;
+      backdrop-filter: blur(10px);
+    }
+
+    .back-buttons button:hover {
+      transform: translateY(-8px) scale(1.05);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+
+    .back-buttons button i {
+      font-size: 24px;
+    }
+
+    #result {
+      margin-top: 30px;
+      font-size: 20px;
+      line-height: 1.7;
+      min-height: 80px;
+      text-align: center;
+      background: rgba(255,255,255,0.2);
+      padding: 20px;
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
+      color: white;
+      font-weight: 500;
+    }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      gap: 60px;
+      margin: 50px 0;
+    }
+
+    .control-btn {
+      width: 90px;
+      height: 90px;
+      font-size: 28px;
+      border: none;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #D32F2F, #b71c1c);
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 15px 40px rgba(211,47,47,0.4);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 300;
+    }
+
+    .control-btn:hover {
+      transform: scale(1.15) translateY(-5px);
+      box-shadow: 0 25px 50px rgba(211,47,47,0.6);
+    }
+
+    .control-btn:active {
+      transform: scale(1.05);
+    }
+
+    .average-stats {
+      font-size: 22px;
+      color: #333;
+      margin-top: 30px;
+      font-weight: 600;
+      text-align: center;
+      background: rgba(255,255,255,0.9);
+      padding: 20px 40px;
+      border-radius: 25px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    /* Bottom Nav */
+    .bottom-nav {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+      padding: 12px 0;
+      z-index: 999;
+    }
+
+    .bottom-nav a {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      color: #666;
+      text-decoration: none;
+      font-size: 13px;
+    }
+
+    .bottom-nav a.active {
+      color: #D32F2F;
+      font-weight: 700;
+    }
+
+    .nav-icon {
+      display: block;
+      font-size: 24px;
+      margin-bottom: 4px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        box-shadow: none;
+        display: flex;
+        flex-wrap: wrap;
+      }
+      .sidebar-menu {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        padding: 10px;
+      }
+      .menu-item {
+        margin: 5px;
+        padding: 12px 15px;
+        min-width: 120px;
+        text-align: center;
+        border-radius: 20px;
+        border: none;
+      }
+      .main-content {
+        margin-right: 0;
+        padding: 25px 20px;
+        padding-bottom: 100px;
+      }
+      .bottom-nav {
+        display: flex;
+      }
+      .card-container {
+        height: 480px;
+      }
+      .card-face {
+        font-size: 36px;
+        padding: 35px 25px;
+      }
+      .back-buttons {
+        gap: 15px;
+      }
+      .back-buttons button {
+        padding: 16px 25px;
+        font-size: 16px;
+      }
+      .controls {
+        gap: 40px;
+      }
+      .control-btn {
+        width: 75px;
+        height: 75px;
+        font-size: 24px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .card-face {
+        font-size: 32px;
+        padding: 25px 20px;
+      }
+      .unit-title {
+        font-size: 26px;
+      }
+    }
+
+    .empty-state {
+      text-align: center;
+      color: #D32F2F;
+      font-size: 24px;
+      margin-top: 100px;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <i class="fas fa-graduation-cap"></i> لوحة التحكم
+    </div>
+    <div class="sidebar-menu">
+      <a href="index.html" class="menu-item">
+        <i class="fas fa-chalkboard-teacher menu-icon"></i>
+        لوحة المدرس
+      </a>
+      <a href="student.html" class="menu-item">
+        <i class="fas fa-user-graduate menu-icon"></i>
+        صفحة الطالب
+      </a>
+      <a href="cards.html" class="menu-item active">
+        <i class="fas fa-cards menu-icon"></i>
+        البطاقات
+      </a>
+      <a href="#" class="menu-item" onclick="signOutUser(); return false;">
+        <i class="fas fa-sign-out-alt menu-icon"></i>
+        خروج
+      </a>
+    </div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <a href="index.html">
+      <span class="nav-icon">👨‍🏫</span> المدرس
+    </a>
+    <a href="student.html">
+      <span class="nav-icon">👨‍🎓</span> الطالب
+    </a>
+    <a href="cards.html" class="active">
+      <span class="nav-icon">🃏</span> البطاقات
+    </a>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="page-header">
+      <h1 class="unit-title" id="unitTitle">جاري التحميل...</h1>
+      <div class="progress-text" id="progress">تحميل الوحدة...</div>
+    </div>
+
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <div class="card-container">
+      <div class="card" id="card">
+        <div class="card-face front" id="front">اضغط على البطاقة للتقليب</div>
+        <div class="card-face back">
+          <div class="back-content">
+            <div id="back"></div>
+            <div class="back-buttons">
+              <button onclick="playSound(event)">
+                <i class="fas fa-volume-high"></i> تشغيل الصوت
+              </button>
+              <button onclick="startPronunciation(event)">
+                <i class="fas fa-microphone"></i> نطق الكلمة
+              </button>
+            </div>
+            <div id="result"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="control-btn" id="prevBtn">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <button class="control-btn" id="nextBtn">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+
+    <div class="average-stats" id="average">متوسط الدقة: جاري الحساب...</div>
+  </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
@@ -28,8 +488,9 @@
     let cards = [];
     let index = 0;
     let audio = null;
-    const unitId = localStorage.getItem("currentUnitId");
 
+    // DOM Elements
+    const unitId = localStorage.getItem("currentUnitId");
     const unitTitle = document.getElementById("unitTitle");
     const front = document.getElementById("front");
     const back = document.getElementById("back");
@@ -54,16 +515,25 @@
 
     async function loadUnit() {
       if (!unitId) {
-        document.body.innerHTML = "<h2 style='text-align:center;margin-top:50px;color:#D32F2F;'>⚠️ اختر وحدة أولاً</h2>";
+        document.querySelector('.main-content').innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-exclamation-triangle fa-3x" style="color:#D32F2F;"></i>
+            <h2>⚠️ اختر وحدة أولاً من صفحة الطالب</h2>
+          </div>
+        `;
         return;
       }
 
       try {
         const unitRef = doc(db, "units", unitId);
         const unitSnap = await getDoc(unitRef);
-
         if (!unitSnap.exists()) {
-          document.body.innerHTML = "<h2 style='text-align:center;margin-top:50px;color:#D32F2F;'>⚠️ الوحدة غير موجودة</h2>";
+          document.querySelector('.main-content').innerHTML = `
+            <div class="empty-state">
+              <i class="fas fa-book fa-3x" style="color:#D32F2F;"></i>
+              <h2>⚠️ الوحدة غير موجودة</h2>
+            </div>
+          `;
           return;
         }
 
@@ -72,26 +542,28 @@
         unitTitle.textContent = data.unitName || "وحدة غير معروفة";
 
         if (cards.length === 0) {
-          progress.textContent = "لا توجد بطاقات في هذه الوحدة";
+          progress.textContent = "لا توجد بطاقات في هذه الوحدة 😔";
           return;
         }
 
         loadCard();
-
-        cardDiv.addEventListener("click", flipCard);
-
-        const soundBtn = document.querySelector('.back-buttons button:first-child');
-        const micBtn = document.querySelector('.back-buttons button:last-child');
-
-        if (soundBtn) soundBtn.addEventListener("click", playSound);
-        if (micBtn) micBtn.addEventListener("click", startPronunciation);
-
-        document.getElementById("prevBtn")?.addEventListener("click", prevCard);
-        document.getElementById("nextBtn")?.addEventListener("click", nextCard);
+        setupEventListeners();
+        updateAverage();
       } catch (error) {
         console.error("Error loading unit:", error);
-        document.body.innerHTML = "<h2 style='text-align:center;margin-top:50px;color:#D32F2F;'>حدث خطأ</h2>";
+        document.querySelector('.main-content').innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-bug fa-3x" style="color:#D32F2F;"></i>
+            <h2>حدث خطأ في التحميل</h2>
+          </div>
+        `;
       }
+    }
+
+    function setupEventListeners() {
+      cardDiv.addEventListener("click", flipCard);
+      document.getElementById("prevBtn").addEventListener("click", prevCard);
+      document.getElementById("nextBtn").addEventListener("click", nextCard);
     }
 
     function updateProgress() {
@@ -109,6 +581,7 @@
       audio = new Audio(cards[index].audio);
       resultDiv.textContent = "";
       updateProgress();
+      updateAverage();
     }
 
     function flipCard() {
@@ -125,16 +598,18 @@
       loadCard();
     }
 
-    function playSound(e) {
+    window.playSound = (e) => {
       e.stopPropagation();
-      if (audio) audio.play();
-    }
+      if (audio) {
+        audio.currentTime = 0;
+        audio.play().catch(e => console.error("Audio play failed:", e));
+      }
+    };
 
     function calculateAccuracy(spoken, correct) {
       spoken = spoken.toLowerCase().trim();
       correct = correct.toLowerCase().trim();
       if (spoken === correct) return 100;
-
       let match = 0;
       for (let i = 0; i < Math.min(spoken.length, correct.length); i++) {
         if (spoken[i] === correct[i]) match++;
@@ -143,21 +618,23 @@
     }
 
     function getGrade(acc) {
-      if (acc >= 90) return "ممتاز ⭐";
-      if (acc >= 75) return "جيد 👍";
-      return "يحتاج تحسين ❌";
+      if (acc >= 90) return "ممتاز ⭐⭐⭐";
+      if (acc >= 75) return "جيد جداً 👍👍";
+      if (acc >= 60) return "جيد 👍";
+      return "يحتاج تدريب أكثر 📚";
     }
 
-    async function startPronunciation(e) {
+    window.startPronunciation = async (e) => {
       if (!recognition) {
-        resultDiv.textContent = "المتصفح لا يدعم التعرف على الصوت";
+        resultDiv.innerHTML = "❌ المتصفح لا يدعم التعرف على الصوت<br>جرب Chrome أو Edge";
         return;
       }
 
       e.stopPropagation();
-      resultDiv.textContent = "🎙️ جاري الاستماع...";
+      resultDiv.innerHTML = "🎙️ جاري الاستماع... تكلم بالإنجليزي!";
+      
       recognition.start();
-
+      
       recognition.onresult = async (event) => {
         const spoken = event.results[0][0].transcript.trim();
         const correct = cards[index].english;
@@ -168,7 +645,7 @@
           const unitRef = doc(db, "units", unitId);
           const userId = localStorage.getItem("userId");
           const field = `cards.${index}.results.${userId}`;
-
+          
           await updateDoc(unitRef, {
             [field]: {
               accuracy: acc,
@@ -179,19 +656,47 @@
           });
 
           resultDiv.innerHTML = `
-            قلت: "<strong>${spoken}</strong>"<br>
-            الدقة: <strong>${acc}%</strong><br>
-            التقييم: <strong>${grade}</strong>
+            <div>📢 قلت: "<strong style="color:#FFD700;">${spoken}</strong>"</div>
+            <div>🎯 الصحيح: "<strong style="color:#00FF88;">${correct}</strong>"</div>
+            <div>📊 الدقة: <strong style="color:#4CAF50;font-size:24px;">${acc}%</strong></div>
+            <div>🏆 التقييم: <strong style="color:#FFEB3B;">${grade}</strong></div>
           `;
+          updateAverage();
         } catch (error) {
           console.error("Error saving result:", error);
-          resultDiv.textContent = "خطأ في حفظ النتيجة";
+          resultDiv.innerHTML = "❌ خطأ في حفظ النتيجة، جرب تاني";
         }
       };
 
       recognition.onerror = () => {
-        resultDiv.textContent = "❌ خطأ في التعرف على الصوت، جرب تاني";
+        resultDiv.innerHTML = "❌ خطأ في التعرف على الصوت<br>تأكد من إذن الميكروفون وجرب تاني";
       };
+
+      recognition.onend = () => {
+        if (!resultDiv.innerHTML.includes("قلت")) {
+          resultDiv.innerHTML = "⏰ انتهى الاستماع، جرب تاني!";
+        }
+      };
+    };
+
+    function updateAverage() {
+      const userId = localStorage.getItem("userId");
+      let totalAcc = 0;
+      let count = 0;
+
+      cards.forEach((card, i) => {
+        if (card.results?.[userId]) {
+          totalAcc += card.results[userId].accuracy || 0;
+          count++;
+        }
+      });
+
+      const avg = count > 0 ? Math.round(totalAcc / count) : 0;
+      avgDiv.innerHTML = `
+        📈 متوسط الدقة: <strong style="color:#D32F2F;font-size:26px;">${avg}%</strong>
+        ${avg >= 80 ? '⭐ ممتاز!' : avg >= 60 ? '👍 جيد!' : '📚 استمر!'}
+        <br><small>(${count}/${cards.length} بطاقة مكتملة)</small>
+      `;
     }
 
     window.signOutUser = async () => {
@@ -201,98 +706,5 @@
       window.location.href = "login.html";
     };
   </script>
-
-  <style>
-    body { font-family: 'Tajawal', sans-serif; background: #f5f5f5; margin: 0; padding: 0; min-height: 100vh; display: flex; }
-    .sidebar { width: 280px; background: white; box-shadow: 4px 0 20px rgba(0,0,0,0.1); position: fixed; top: 0; bottom: 0; right: 0; overflow-y: auto; z-index: 100; }
-    .sidebar-header { background: #D32F2F; color: white; padding: 30px 20px; text-align: center; font-size: 22px; font-weight: 700; }
-    .sidebar-menu { padding: 20px 0; }
-    .menu-item { display: flex; align-items: center; padding: 18px 30px; color: #555; text-decoration: none; font-size: 18px; transition: all 0.3s; }
-    .menu-item:hover { background: #f0f0f0; color: #D32F2F; }
-    .menu-item.active { background: #D32F2F; color: white; font-weight: 700; }
-    .menu-icon { font-size: 28px; margin-left: 16px; }
-    .main-content { flex: 1; padding: 40px; margin-right: 280px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-    .unit-title { font-size: 28px; font-weight: 700; color: #D32F2F; margin-bottom: 20px; }
-    #progress { font-size: 22px; color: #555; margin-bottom: 30px; }
-    .progress-bar { width: 380px; max-width: 90%; height: 8px; background: #eee; border-radius: 4px; overflow: hidden; margin: 20px 0; }
-    .progress-fill { height: 100%; background: #D32F2F; width: 0%; transition: width 0.4s ease; }
-    .card-container { width: 420px; max-width: 95%; perspective: 1200px; margin: 20px 0; }
-    .card { width: 100%; height: 500px; position: relative; transform-style: preserve-3d; transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55); cursor: pointer; border-radius: 28px; box-shadow: 0 15px 50px rgba(0,0,0,0.2); }
-    .card.flip { transform: rotateY(180deg); }
-    .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 28px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; box-sizing: border-box; font-size: 36px; font-weight: 700; color: white; text-align: center; }
-    .front { background: #D32F2F; }
-    .back { background: #27ae60; transform: rotateY(180deg); }
-    .back-content { width: 100%; text-align: center; }
-    .back-buttons { margin-top: 40px; display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; }
-    .back-buttons button { padding: 18px 32px; font-size: 20px; border: none; border-radius: 20px; background: white; color: #333; cursor: pointer; transition: all 0.3s; box-shadow: 0 8px 20px rgba(0,0,0,0.15); font-weight: 600; display: flex; align-items: center; gap: 12px; }
-    .back-buttons button i { font-size: 26px; }
-    .back-buttons button:hover { transform: translateY(-6px); box-shadow: 0 15px 30px rgba(0,0,0,0.25); }
-    #result { margin-top: 30px; font-size: 20px; line-height: 1.6; min-height: 60px; }
-    .controls { display: flex; gap: 50px; margin-top: 40px; }
-    .controls button { width: 80px; height: 80px; font-size: 42px; border: none; border-radius: 50%; background: #D32F2F; color: white; cursor: pointer; box-shadow: 0 10px 30px rgba(211, 47, 47, 0.35); transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; }
-    .controls button:hover { background: #b71c1c; transform: scale(1.2); box-shadow: 0 15px 40px rgba(211, 47, 47, 0.5); }
-    .controls button:active { transform: scale(1.1); }
-    #average { font-size: 20px; color: #333; margin-top: 40px; font-weight: 600; }
-    @media (max-width: 768px) {
-      .sidebar { width: 100%; height: auto; position: relative; box-shadow: none; }
-      .main-content { margin-right: 0; padding: 20px; }
-      body { flex-direction: column; }
-      .card-container { width: 380px; height: 460px; }
-      .card-face { font-size: 30px; padding: 30px; }
-      .controls button { width: 70px; height: 70px; font-size: 38px; }
-      .back-buttons button { padding: 16px 28px; font-size: 18px; }
-    }
-  </style>
-</head>
-<body>
-
-  <div class="sidebar">
-    <div class="sidebar-header">📚 لوحة التحكم</div>
-    <div class="sidebar-menu">
-      <a href="index.html" class="menu-item"><span class="menu-icon">👨‍🏫</span> لوحة المدرس</a>
-      <a href="student.html" class="menu-item"><span class="menu-icon">👨‍🎓</span> صفحة الطالب</a>
-      <a href="cards.html" class="menu-item active"><span class="menu-icon">🃏</span> عرض البطاقات</a>
-      <a href="#" onclick="signOutUser(); return false;" class="menu-item">
-        <span class="menu-icon">🚪</span> خروج
-      </a>
-    </div>
-  </div>
-
-  <div class="main-content">
-    <h2 class="unit-title" id="unitTitle"></h2>
-    <h3 id="progress"></h3>
-
-    <div class="card-container">
-      <div class="card" id="card">
-        <div class="card-face front" id="front"></div>
-        <div class="card-face back">
-          <div class="back-content">
-            <div id="back"></div>
-            <div class="back-buttons">
-              <button>
-                <i class="fas fa-volume-high"></i> تشغيل الصوت
-              </button>
-              <button>
-                <i class="fas fa-microphone"></i> نطق الكلمة
-              </button>
-            </div>
-            <div id="result"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="progress-bar">
-      <div class="progress-fill" id="progressFill"></div>
-    </div>
-
-    <div class="controls">
-      <button id="prevBtn"><i class="fas fa-chevron-left"></i></button>
-      <button id="nextBtn"><i class="fas fa-chevron-right"></i></button>
-    </div>
-
-    <h4 id="average"></h4>
-  </div>
-
 </body>
 </html>
