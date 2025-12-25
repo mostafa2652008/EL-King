@@ -213,8 +213,8 @@
 
     #result {
       margin-top: 30px;
-      font-size: 20px;
-      line-height: 1.7;
+      font-size: 18px;
+      line-height: 1.8;
       min-height: 80px;
       text-align: center;
       background: rgba(255,255,255,0.2);
@@ -223,6 +223,38 @@
       backdrop-filter: blur(10px);
       color: white;
       font-weight: 500;
+    }
+
+    .result-excellent {
+      animation: celebrate 0.6s ease;
+    }
+
+    .result-good {
+      animation: goodJob 0.4s ease;
+    }
+
+    .result-fair {
+      animation: fadeIn 0.3s ease;
+    }
+
+    .result-poor {
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes celebrate {
+      0%, 100% { transform: scale(1); }
+      25% { transform: scale(1.1) rotate(2deg); }
+      75% { transform: scale(1.1) rotate(-2deg); }
+    }
+
+    @keyframes goodJob {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .controls {
@@ -410,7 +442,12 @@
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = SpeechRecognition ? new SpeechRecognition() : null;
-    if (recognition) recognition.lang = "en-US";
+    if (recognition) {
+      recognition.lang = "en-US";
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 3;
+    }
 
     onAuthStateChanged(auth, (user) => {
       if (!user) return window.location.href = "login.html";
@@ -484,22 +521,68 @@
       if (audio) audio.play().catch(() => {});
     };
 
-    function calculateAccuracy(spoken, correct) {
-      spoken = spoken.toLowerCase().trim();
-      correct = correct.toLowerCase().trim();
-      if (spoken === correct) return 100;
-      let match = 0;
-      for (let i = 0; i < Math.min(spoken.length, correct.length); i++) {
-        if (spoken[i] === correct[i]) match++;
+    // دالة لتنظيف النص وإزالة علامات الترقيم
+    function cleanText(text) {
+      return text
+        .toLowerCase()
+        .trim()
+        .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "")
+        .replace(/\s+/g, " ");
+    }
+
+    // خوارزمية Levenshtein Distance لحساب التشابه بين النصوص
+    function levenshteinDistance(str1, str2) {
+      const len1 = str1.length;
+      const len2 = str2.length;
+      const matrix = Array(len1 + 1).fill(null).map(() => Array(len2 + 1).fill(0));
+
+      for (let i = 0; i <= len1; i++) matrix[i][0] = i;
+      for (let j = 0; j <= len2; j++) matrix[0][j] = j;
+
+      for (let i = 1; i <= len1; i++) {
+        for (let j = 1; j <= len2; j++) {
+          const cost = str1[i - 1] === str2[j - 1] ? 0 : 1;
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j] + 1,
+            matrix[i][j - 1] + 1,
+            matrix[i - 1][j - 1] + cost
+          );
+        }
       }
-      return Math.round((match / correct.length) * 100);
+
+      return matrix[len1][len2];
+    }
+
+    function calculateAccuracy(spoken, correct) {
+      const cleanSpoken = cleanText(spoken);
+      const cleanCorrect = cleanText(correct);
+      
+      if (cleanSpoken === cleanCorrect) return 100;
+
+      const distance = levenshteinDistance(cleanSpoken, cleanCorrect);
+      const maxLen = Math.max(cleanSpoken.length, cleanCorrect.length);
+      
+      const accuracy = Math.max(0, Math.round(((maxLen - distance) / maxLen) * 100));
+
+      return accuracy;
     }
 
     function getGrade(acc) {
+      if (acc === 100) return "ممتاز جداً 🏆⭐⭐⭐";
       if (acc >= 90) return "ممتاز ⭐⭐⭐";
-      if (acc >= 75) return "جيد جداً 👍👍";
-      if (acc >= 60) return "جيد 👍";
+      if (acc >= 80) return "جيد جداً 👍👍";
+      if (acc >= 70) return "جيد 👍";
+      if (acc >= 50) return "مقبول 📖";
       return "يحتاج تدريب 📚";
+    }
+
+    function getFeedback(acc) {
+      if (acc === 100) return "نطق مثالي! واصل التميز 🎉";
+      if (acc >= 90) return "نطق ممتاز! قريب من الكمال";
+      if (acc >= 80) return "نطق جيد جداً! استمر في التدريب";
+      if (acc >= 70) return "نطق جيد، حاول التركيز أكثر على المخارج";
+      if (acc >= 50) return "جيد للبداية، استمع للصوت وحاول مرة أخرى";
+      return "استمع جيداً للنطق الصحيح وحاول مجدداً";
     }
 
     window.startPronunciation = async (e) => {
@@ -509,62 +592,96 @@
       }
 
       e.stopPropagation();
-      resultDiv.innerHTML = "🎙️ جاري الاستماع... تكلم بالإنجليزي!";
+      resultDiv.innerHTML = "🎙️ جاري الاستماع... انطق الكلمة بوضوح!";
 
-      recognition.start();
+      try {
+        recognition.start();
+      } catch (error) {
+        if (error.name === 'InvalidStateError') {
+          recognition.stop();
+          setTimeout(() => recognition.start(), 100);
+        }
+      }
 
       recognition.onresult = async (event) => {
         const spoken = event.results[0][0].transcript.trim();
+        const confidence = event.results[0][0].confidence;
         const correct = cards[index].english;
         const acc = calculateAccuracy(spoken, correct);
         const grade = getGrade(acc);
+        const feedback = getFeedback(acc);
+
+        let colorClass = "result-excellent";
+        if (acc < 90) colorClass = "result-good";
+        if (acc < 70) colorClass = "result-fair";
+        if (acc < 50) colorClass = "result-poor";
 
         try {
           const unitRef = doc(db, "units", unitId);
           const userId = localStorage.getItem("userId");
 
-          // 1. جلب الوحدة الحالية
           const unitSnap = await getDoc(unitRef);
           if (!unitSnap.exists()) throw new Error("الوحدة غير موجودة");
 
           const unitData = unitSnap.data();
           const currentCards = unitData.cards || [];
-
-          // 2. نسخة معدلة من البطاقة الحالية
           const updatedCard = { ...currentCards[index] };
 
-          // 3. تحديث أو إضافة نتيجة المستخدم
           if (!updatedCard.results) updatedCard.results = {};
           updatedCard.results[userId] = {
             accuracy: acc,
             grade,
             spoken,
+            confidence: Math.round(confidence * 100),
             timestamp: new Date().toISOString()
           };
 
-          // 4. استبدال البطاقة في المصفوفة
           const newCards = [...currentCards];
           newCards[index] = updatedCard;
 
-          // 5. حفظ التغييرات
           await updateDoc(unitRef, { cards: newCards });
 
-          // عرض النتيجة
           resultDiv.innerHTML = `
-            قلت: "<strong>${spoken}</strong>"<br>
-            الدقة: <strong>${acc}%</strong><br>
-            التقييم: <strong>${grade}</strong>
+            <div class="${colorClass}">
+              <div style="font-size: 24px; margin-bottom: 10px;">${grade}</div>
+              <div style="margin-bottom: 8px;">📝 قلت: "<strong>${spoken}</strong>"</div>
+              <div style="margin-bottom: 8px;">✅ الصحيح: "<strong>${correct}</strong>"</div>
+              <div style="margin-bottom: 8px;">🎯 الدقة: <strong>${acc}%</strong></div>
+              <div style="margin-bottom: 8px;">🔊 جودة الصوت: <strong>${Math.round(confidence * 100)}%</strong></div>
+              <div style="font-size: 16px; margin-top: 10px; opacity: 0.9;">${feedback}</div>
+            </div>
           `;
 
           updateAverage();
         } catch (error) {
           console.error("خطأ في الحفظ:", error);
-          resultDiv.innerHTML = "❌ خطأ في حفظ النتيجة";
+          resultDiv.innerHTML = "❌ خطأ في حفظ النتيجة، حاول مرة أخرى";
         }
       };
 
-      recognition.onerror = () => {
-        resultDiv.innerHTML = "❌ خطأ في التعرف على الصوت";
+      recognition.onerror = (event) => {
+        let errorMsg = "❌ خطأ في التعرف على الصوت";
+        
+        switch(event.error) {
+          case 'no-speech':
+            errorMsg = "⚠️ لم يتم التقاط صوت، حاول مرة أخرى";
+            break;
+          case 'audio-capture':
+            errorMsg = "⚠️ تأكد من تفعيل الميكروفون";
+            break;
+          case 'not-allowed':
+            errorMsg = "⚠️ يجب السماح باستخدام الميكروفون";
+            break;
+          case 'network':
+            errorMsg = "⚠️ تحقق من اتصال الإنترنت";
+            break;
+        }
+        
+        resultDiv.innerHTML = errorMsg;
+      };
+
+      recognition.onend = () => {
+        // يمكن إضافة أي إجراء عند انتهاء التسجيل
       };
     };
 
