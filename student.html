@@ -6,311 +6,424 @@
   <title>صفحة الطالب</title>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-    import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyA9WXBcRf8QBsRAafAcnKYVFx_kF5B0Gr0",
-      authDomain: "educate-a2aad.firebaseapp.com",
-      projectId: "educate-a2aad",
-      storageBucket: "educate-a2aad.firebasestorage.app",
-      messagingSenderId: "237633521728",
-      appId: "1:237633521728:web:1ec7e6aae3ae0711ef37a5"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        window.location.href = "login.html";
-      } else {
-        localStorage.setItem("userId", user.uid);
-        await loadUserName();
-        loadUnits();
-      }
-    });
-
-    async function loadUserName() {
-      const userId = localStorage.getItem("userId");
-      if (userId) {
-        const userDoc = await getDoc(doc(db, "users", userId));
-        if (userDoc.exists()) {
-          document.getElementById("userName").textContent = "مرحبا، " + (userDoc.data().displayName || "طالب");
-        }
-      }
-    }
-
-    async function loadUnits() {
-      const container = document.getElementById("units");
-      const noUnitsMsg = document.getElementById("noUnitsMsg");
-
-      try {
-        const querySnapshot = await getDocs(collection(db, "units"));
-
-        if (querySnapshot.empty) {
-          noUnitsMsg.style.display = "block";
-          return;
-        }
-
-        container.innerHTML = "";
-
-        querySnapshot.forEach((docSnap) => {
-          const unit = docSnap.data();
-          const unitId = docSnap.id;
-
-          // حساب الإحصائيات
-          const totalCards = unit.cards?.length || 0;
-          let completed = 0;
-          let totalAccuracy = 0;
-          const userId = localStorage.getItem("userId");
-
-          unit.cards?.forEach(card => {
-            if (card.results?.[userId]) {
-              completed++;
-              totalAccuracy += card.results[userId].accuracy || 0;
-            }
-          });
-
-          const progress = totalCards > 0 ? Math.round((completed / totalCards) * 100) : 0;
-          const avgAccuracy = completed > 0 ? Math.round(totalAccuracy / completed) : 0;
-
-          // اختيار أيقونة
-          let icon = "📖";
-          const unitNameLower = (unit.unitName || "").toLowerCase();
-
-          if (unitNameLower.includes("greeting") || unitNameLower.includes("تحية")) icon = "👋";
-          else if (unitNameLower.includes("food") || unitNameLower.includes("طعام")) icon = "🍔";
-          else if (unitNameLower.includes("family") || unitNameLower.includes("عائلة")) icon = "👨‍👩‍👧";
-          else if (unitNameLower.includes("travel") || unitNameLower.includes("سفر")) icon = "✈️";
-          else if (unitNameLower.includes("school") || unitNameLower.includes("مدرسة")) icon = "📚";
-          else if (unitNameLower.includes("colors") || unitNameLower.includes("ألوان")) icon = "🎨";
-          else if (unitNameLower.includes("numbers") || unitNameLower.includes("أرقام")) icon = "🔢";
-
-          const cardElement = document.createElement("div");
-          cardElement.className = "unit-card";
-
-          cardElement.innerHTML = `
-            <div style="padding: 20px; text-align: center;">
-              <div style="font-size: 48px; margin-bottom: 10px;">
-                ${icon}
-              </div>
-              <div style="font-size: 24px; font-weight: bold; margin-bottom: 12px;">
-                ${unit.unitName || "وحدة غير مسماة"}
-              </div>
-              <div style="font-size: 16px; color: #555; margin-bottom: 15px;">
-                ${totalCards} كلمة
-              </div>
-
-              <div style="margin: 15px 0; background: #eee; height: 10px; border-radius: 5px; overflow: hidden;">
-                <div style="width: ${progress}%; height: 100%; background: #27ae60; transition: width 0.5s;"></div>
-              </div>
-
-              <div style="font-size: 18px; font-weight: bold; color: #27ae60;">
-                أنجزت ${progress}%
-              </div>
-
-              ${avgAccuracy > 0 ? `
-                <div style="font-size: 14px; color: #555; margin-top: 8px;">
-                  متوسط الدقة: ${avgAccuracy}%
-                </div>
-              ` : ''}
-
-              <button style="margin-top: 20px; width: 100%; padding: 12px; font-size: 18px;">
-                ${progress === 100 ? 'راجع الوحدة' : 'ابدأ الآن'}
-              </button>
-            </div>
-          `;
-
-          cardElement.querySelector("button").onclick = () => {
-            localStorage.setItem("currentUnitId", unitId);
-            location.href = "cards.html";
-          };
-
-          container.appendChild(cardElement);
-        });
-      } catch (error) {
-        console.error("Error loading units:", error);
-        noUnitsMsg.textContent = "حدث خطأ أثناء تحميل الوحدات 😕";
-        noUnitsMsg.style.display = "block";
-      }
-    }
-
-    window.signOutUser = async () => {
-      await signOut(auth);
-      localStorage.removeItem("userId");
-      window.location.href = "login.html";
-    };
-  </script>
-
+  
   <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
     body {
       font-family: 'Tajawal', sans-serif;
-      background: #f5f5f5;
-      margin: 0;
-      padding: 0;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
       min-height: 100vh;
+      overflow-x: hidden;
     }
+
+    /* Sidebar */
     .sidebar {
       width: 280px;
-      background: white;
-      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+      height: 100vh;
+      background: linear-gradient(180deg, #D32F2F 0%, #b71c1c 100%);
       position: fixed;
       top: 0;
-      bottom: 0;
       right: 0;
+      box-shadow: -8px 0 30px rgba(211,47,47,0.3);
+      z-index: 1000;
       overflow-y: auto;
-      z-index: 100;
     }
     .sidebar-header {
-      background: #D32F2F;
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
       color: white;
-      padding: 30px 20px;
+      padding: 25px 20px;
       text-align: center;
-      font-size: 22px;
+      font-size: 20px;
       font-weight: 700;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
     }
-    .sidebar-menu { padding: 20px 0; }
+    .sidebar-menu {
+      padding: 10px 0;
+    }
     .menu-item {
       display: flex;
       align-items: center;
-      padding: 18px 30px;
-      color: #555;
+      padding: 16px 25px;
+      color: rgba(255,255,255,0.9);
       text-decoration: none;
-      font-size: 18px;
-      transition: all 0.3s;
+      font-size: 16px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      border-right: 4px solid transparent;
+      margin: 2px 10px;
+      border-radius: 15px 0 0 15px;
     }
-    .menu-item:hover { background: #f0f0f0; color: #D32F2F; }
-    .menu-item.active { background: #D32F2F; color: white; font-weight: 700; }
-    .menu-icon { font-size: 28px; margin-left: 16px; }
+    .menu-item:hover {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border-right-color: #fff;
+      transform: translateX(-5px);
+    }
+    .menu-item.active {
+      background: rgba(255,255,255,0.25);
+      color: white;
+      border-right-color: #FFEBEE;
+      font-weight: 700;
+    }
+    .menu-icon {
+      font-size: 22px;
+      margin-left: 15px;
+      width: 25px;
+    }
+
+    /* Main Content */
     .main-content {
-      padding: 40px 20px;
-      transition: margin-right 0.3s;
+      margin-right: 280px;
+      padding: 40px 30px;
+      min-height: 100vh;
     }
-    @media (min-width: 769px) {
-      .main-content { margin-right: 280px; }
-    }
+
     .page-title {
-      text-align: center;
-      font-size: 28px;
+      font-size: 32px;
       font-weight: 700;
       color: #D32F2F;
-      margin-bottom: 40px;
-    }
-    #userName {
       text-align: center;
-      font-size: 24px;
-      font-weight: bold;
-      color: #D32F2F;
-      margin-bottom: 20px;
+      margin-bottom: 15px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
     }
+
+    .welcome {
+      text-align: center;
+      font-size: 20px;
+      color: #444;
+      margin-bottom: 45px;
+      font-weight: 500;
+    }
+
     .units-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 24px;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 25px;
       max-width: 1400px;
       margin: 0 auto;
     }
+
     .unit-card {
-      background: white;
-      border-radius: 20px;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(12px);
+      border-radius: 24px;
+      box-shadow: 0 12px 35px rgba(0,0,0,0.12);
       overflow: hidden;
-      transition: all 0.3s ease;
+      transition: all 0.4s ease;
+      border: 1px solid rgba(255,255,255,0.4);
       cursor: pointer;
     }
+
     .unit-card:hover {
-      transform: translateY(-8px);
-      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+      transform: translateY(-12px);
+      box-shadow: 0 25px 60px rgba(211,47,47,0.22);
     }
+
+    .unit-content {
+      padding: 30px;
+      text-align: center;
+    }
+
+    .unit-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+      line-height: 1;
+    }
+
+    .unit-name {
+      font-size: 24px;
+      font-weight: 700;
+      color: #222;
+      margin-bottom: 12px;
+    }
+
+    .unit-stats {
+      font-size: 16px;
+      color: #555;
+      margin-bottom: 20px;
+    }
+
+    .progress-container {
+      height: 12px;
+      background: #f0f0f0;
+      border-radius: 6px;
+      overflow: hidden;
+      margin: 18px 0;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #27ae60, #2ecc71);
+      transition: width 0.8s ease;
+    }
+
+    .progress-text {
+      font-size: 18px;
+      font-weight: 700;
+      color: #27ae60;
+      margin-bottom: 12px;
+    }
+
+    .accuracy-text {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .start-btn {
+      width: 100%;
+      padding: 16px;
+      margin-top: 20px;
+      background: linear-gradient(135deg, #D32F2F, #b71c1c);
+      color: white;
+      border: none;
+      border-radius: 14px;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .start-btn:hover {
+      background: linear-gradient(135deg, #b71c1c, #9c1a1a);
+      transform: translateY(-2px);
+    }
+
     .no-units {
       text-align: center;
-      font-size: 20px;
+      font-size: 22px;
       color: #777;
-      margin-top: 80px;
-      line-height: 1.8;
+      margin-top: 100px;
+      line-height: 1.6;
     }
-    .bottom-nav {
-      display: none;
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: white;
-      border-top: 1px solid #eee;
-      box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
-      padding: 10px 0;
-      justify-content: space-around;
-      z-index: 1000;
-    }
-    .bottom-nav a {
-      text-align: center;
-      color: #999;
-      font-size: 14px;
-      text-decoration: none;
-      flex: 1;
-    }
-    .bottom-nav a.active {
-      color: #D32F2F;
-      font-weight: 700;
-    }
-    .bottom-nav .nav-icon {
-      font-size: 28px;
-      display: block;
-      margin-bottom: 4px;
-    }
+
+    /* Responsive */
     @media (max-width: 768px) {
-      .sidebar { display: none; }
-      .main-content { padding-bottom: 80px; }
-      .bottom-nav { display: flex; }
-      .units-grid { grid-template-columns: 1fr; gap: 20px; }
-      .page-title { font-size: 24px; margin-bottom: 30px; }
-      .unit-card:hover { transform: none; }
+      .sidebar {
+        display: none;
+      }
+      .main-content {
+        margin-right: 0;
+        padding: 30px 20px;
+        padding-bottom: 90px;
+      }
+      .units-grid {
+        grid-template-columns: 1fr;
+      }
+      .bottom-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+        padding: 12px 0;
+        z-index: 999;
+      }
+      .bottom-nav a {
+        flex: 1;
+        text-align: center;
+        padding: 8px;
+        color: #666;
+        text-decoration: none;
+        font-size: 13px;
+      }
+      .bottom-nav a.active {
+        color: #D32F2F;
+        font-weight: 700;
+      }
+      .nav-icon {
+        font-size: 24px;
+        display: block;
+        margin-bottom: 4px;
+      }
     }
   </style>
 </head>
 <body>
 
-  <div class="sidebar">
-    <div class="sidebar-header">📚 لوحة التحكم</div>
-    <div class="sidebar-menu">
-      <a href="index.html" class="menu-item">
-        <span class="menu-icon">👨‍🏫</span>
-        لوحة المدرس
-      </a>
-      <a href="student.html" class="menu-item active">
-        <span class="menu-icon">👨‍🎓</span>
-        صفحة الطالب
-      </a>
-      <a href="cards.html" class="menu-item">
-        <span class="menu-icon">🃏</span>
-        البطاقات
-      </a>
-      <a href="#" onclick="signOutUser(); return false;" class="menu-item">
-        <span class="menu-icon">🚪</span>
-        خروج
-      </a>
-    </div>
+<div class="sidebar">
+  <div class="sidebar-header">
+    <i class="fas fa-graduation-cap"></i> لوحة التحكم
   </div>
-
-  <div class="bottom-nav">
-    <a href="index.html"><span class="nav-icon">👨‍🏫</span> لوحة المدرس</a>
-    <a href="student.html" class="active"><span class="nav-icon">👨‍🎓</span> الطالب</a>
-    <a href="cards.html"><span class="nav-icon">🃏</span> البطاقات</a>
+  <div class="sidebar-menu">
+    <a href="index.html" class="menu-item">
+      <i class="fas fa-chalkboard-teacher menu-icon"></i>
+      لوحة المدرس
+    </a>
+    <a href="student.html" class="menu-item active">
+      <i class="fas fa-user-graduate menu-icon"></i>
+      صفحة الطالب
+    </a>
+    <a href="cards.html" class="menu-item">
+      <i class="fas fa-cards menu-icon"></i>
+      البطاقات
+    </a>
+    <a href="#" onclick="signOutUser(); return false;" class="menu-item">
+      <i class="fas fa-sign-out-alt menu-icon"></i>
+      خروج
+    </a>
   </div>
+</div>
 
-  <div class="main-content">
-    <h1 id="userName" class="page-title">مرحبا، طالب</h1>
-    <div class="units-grid" id="units"></div>
-    <div class="no-units" id="noUnitsMsg" style="display:none;">
-      لا توجد وحدات متاحة حالياً 😔<br>
-      اطلب من المدرس إضافة وحدات جديدة
-    </div>
+<div class="bottom-nav">
+  <a href="index.html">
+    <span class="nav-icon">👨‍🏫</span> المدرس
+  </a>
+  <a href="student.html" class="active">
+    <span class="nav-icon">👨‍🎓</span> الطالب
+  </a>
+  <a href="cards.html">
+    <span class="nav-icon">🃏</span> البطاقات
+  </a>
+</div>
+
+<div class="main-content">
+  <h1 class="page-title">صفحة الطالب <i class="fas fa-user-graduate"></i></h1>
+  <div class="welcome" id="userName">جاري التحميل...</div>
+
+  <div class="units-grid" id="units"></div>
+
+  <div class="no-units" id="noUnitsMsg" style="display:none;">
+    لا توجد وحدات متاحة حالياً 😔<br>
+    اطلب من المدرس إضافة وحدات جديدة
   </div>
+</div>
 
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyA9WXBcRf8QBsRAafAcnKYVFx_kF5B0Gr0",
+    authDomain: "educate-a2aad.firebaseapp.com",
+    projectId: "educate-a2aad",
+    storageBucket: "educate-a2aad.firebasestorage.app",
+    messagingSenderId: "237633521728",
+    appId: "1:237633521728:web:1ec7e6aae3ae0711ef37a5"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  let userDisplayName = "طالب";
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      window.location.href = "login.html";
+      return;
+    }
+
+    localStorage.setItem("userId", user.uid);
+
+    // جلب اسم الطالب
+    try {
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      if (userDoc.exists()) {
+        userDisplayName = userDoc.data().displayName || "طالب";
+      }
+    } catch (e) {
+      console.error("Error getting user name:", e);
+    }
+
+    document.getElementById("userName").textContent = 
+      userDisplayName === "طالب" ? "مرحباً بك 👋" : `مرحباً يا ${userDisplayName} 👋`;
+
+    loadUnits();
+  });
+
+  async function loadUnits() {
+    const container = document.getElementById("units");
+    const noUnitsMsg = document.getElementById("noUnitsMsg");
+    
+    try {
+      const querySnapshot = await getDocs(collection(db, "units"));
+      if (querySnapshot.empty) {
+        noUnitsMsg.style.display = "block";
+        return;
+      }
+
+      container.innerHTML = "";
+      const userId = localStorage.getItem("userId");
+
+      querySnapshot.forEach((docSnap) => {
+        const unit = docSnap.data();
+        const unitId = docSnap.id;
+
+        const totalCards = unit.cards?.length || 0;
+        let completed = 0;
+        let totalAccuracy = 0;
+
+        unit.cards?.forEach(card => {
+          if (card.results?.[userId]) {
+            completed++;
+            totalAccuracy += card.results[userId].accuracy || 0;
+          }
+        });
+
+        const progress = totalCards > 0 ? Math.round((completed / totalCards) * 100) : 0;
+        const avgAccuracy = completed > 0 ? Math.round(totalAccuracy / completed) : 0;
+
+        // أيقونة ذكية حسب اسم الوحدة
+        let icon = "📖";
+        const name = (unit.unitName || "").toLowerCase();
+        if (name.includes("greeting") || name.includes("تحية")) icon = "👋";
+        else if (name.includes("food") || name.includes("طعام")) icon = "🍔";
+        else if (name.includes("family") || name.includes("عائلة")) icon = "👨‍👩‍👧";
+        else if (name.includes("travel") || name.includes("سفر")) icon = "✈️";
+        else if (name.includes("school") || name.includes("مدرسة")) icon = "📚";
+        else if (name.includes("color") || name.includes("ألوان")) icon = "🎨";
+        else if (name.includes("number") || name.includes("أرقام")) icon = "🔢";
+
+        const card = document.createElement("div");
+        card.className = "unit-card";
+        card.innerHTML = `
+          <div class="unit-content">
+            <div class="unit-icon">${icon}</div>
+            <div class="unit-name">${unit.unitName || "وحدة غير مسماة"}</div>
+            <div class="unit-stats">${totalCards} كلمة</div>
+            
+            <div class="progress-container">
+              <div class="progress-bar" style="width: ${progress}%"></div>
+            </div>
+            
+            <div class="progress-text">أنجزت ${progress}%</div>
+            ${avgAccuracy > 0 ? `
+              <div class="accuracy-text">متوسط الدقة: ${avgAccuracy}%</div>
+            ` : ''}
+            
+            <button class="start-btn">
+              ${progress === 100 ? 'راجع الوحدة' : 'ابدأ الآن'}
+            </button>
+          </div>
+        `;
+
+        card.onclick = () => {
+          localStorage.setItem("currentUnitId", unitId);
+          window.location.href = "cards.html";
+        };
+
+        container.appendChild(card);
+      });
+    } catch (error) {
+      console.error("Error loading units:", error);
+      noUnitsMsg.textContent = "حدث خطأ أثناء تحميل الوحدات 😕";
+      noUnitsMsg.style.display = "block";
+    }
+  }
+
+  window.signOutUser = async () => {
+    await signOut(auth);
+    localStorage.removeItem("userId");
+    window.location.href = "login.html";
+  };
+const userDoc = await getDoc(doc(db, "users", user.uid));
+const displayName = userDoc.exists() ? userDoc.data().displayName || "طالب" : "طالب";
+document.getElementById("userName").textContent = `مرحباً يا ${displayName} 👋`;
+localStorage.setItem("displayName", displayName);
+</script>
 </body>
 </html>
