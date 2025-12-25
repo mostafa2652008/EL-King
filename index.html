@@ -6,11 +6,453 @@
   <title>لوحة المدرس</title>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Tajawal', sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .sidebar {
+      width: 280px;
+      height: 100vh;
+      background: linear-gradient(180deg, #D32F2F 0%, #b71c1c 100%);
+      position: fixed;
+      top: 0;
+      right: 0;
+      box-shadow: -8px 0 30px rgba(211, 47, 47, 0.3);
+      z-index: 1000;
+      overflow-y: auto;
+    }
+    .sidebar-header {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      color: white;
+      padding: 25px 20px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: 700;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+    .sidebar-menu {
+      padding: 10px 0;
+    }
+    .menu-item {
+      display: flex;
+      align-items: center;
+      padding: 16px 25px;
+      color: rgba(255,255,255,0.9);
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      border-right: 4px solid transparent;
+      margin: 2px 10px;
+      border-radius: 15px 0 0 15px;
+    }
+    .menu-item:hover {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border-right-color: #fff;
+      transform: translateX(-5px);
+    }
+    .menu-item.active {
+      background: rgba(255,255,255,0.25);
+      color: white;
+      border-right-color: #FFEBEE;
+      font-weight: 700;
+    }
+    .menu-icon {
+      font-size: 22px;
+      margin-left: 15px;
+      width: 25px;
+    }
+    .main-content {
+      margin-right: 280px;
+      padding: 30px;
+      min-height: 100vh;
+      padding-top: 40px;
+    }
+    @media (max-width: 768px) {
+      .sidebar { 
+        width: 100%; 
+        height: auto; 
+        position: relative; 
+        box-shadow: none;
+        display: flex;
+        flex-wrap: wrap;
+      }
+      .sidebar-menu { 
+        display: flex; 
+        justify-content: center;
+        flex-wrap: wrap;
+        padding: 10px;
+      }
+      .menu-item { 
+        margin: 5px; 
+        padding: 12px 15px;
+        min-width: 120px;
+        text-align: center;
+        border-radius: 20px;
+        border: none;
+      }
+      .main-content { 
+        margin-right: 0; 
+        padding: 20px 15px; 
+      }
+    }
+    .bottom-nav {
+      display: none;
+    }
+    @media (max-width: 768px) {
+      .bottom-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+        padding: 10px 0;
+        z-index: 999;
+      }
+      .bottom-nav a {
+        flex: 1;
+        text-align: center;
+        padding: 10px;
+        color: #666;
+        text-decoration: none;
+        font-size: 12px;
+      }
+      .bottom-nav a.active { color: #D32F2F; font-weight: 700; }
+      .nav-icon { display: block; font-size: 20px; margin-bottom: 5px; }
+    }
+    .page-title {
+      font-size: 32px;
+      font-weight: 700;
+      color: #D32F2F;
+      text-align: center;
+      margin-bottom: 40px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    }
+    .boxes-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+      gap: 25px;
+    }
+    .box {
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(15px);
+      border-radius: 25px;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+      overflow: hidden;
+      transition: all 0.4s ease;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    .box:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 25px 60px rgba(211,47,47,0.2);
+    }
+    .header {
+      background: linear-gradient(135deg, #D32F2F 0%, #b71c1c 100%);
+      color: white;
+      padding: 25px 30px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: 700;
+      position: relative;
+      overflow: hidden;
+    }
+    .header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 100%;
+      height: 200%;
+      background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+      transform: rotate(45deg);
+      animation: shine 3s infinite;
+    }
+    @keyframes shine {
+      0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+      100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+    }
+    .content {
+      padding: 35px;
+      min-height: 200px;
+    }
+    .input-group {
+      margin-bottom: 25px;
+    }
+    label {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 16px;
+      color: #333;
+      font-weight: 600;
+    }
+    input[type="text"], input[type="file"] {
+      width: 100%;
+      padding: 18px 20px;
+      border-radius: 15px;
+      border: 2px solid #e0e0e0;
+      background: rgba(255,255,255,0.8);
+      font-size: 16px;
+      font-family: 'Tajawal', sans-serif;
+      transition: all 0.3s;
+    }
+    input:focus {
+      outline: none;
+      border-color: #D32F2F;
+      box-shadow: 0 0 0 3px rgba(211,47,47,0.1);
+      transform: scale(1.02);
+    }
+    .add-btn, .edit-btn, .delete-btn {
+      width: 100%;
+      padding: 18px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 15px;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-family: 'Tajawal', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .add-btn {
+      background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+      color: white;
+    }
+    .add-btn:hover { background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%); transform: translateY(-2px); }
+    .edit-btn {
+      background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+      color: white;
+      margin: 5px 0;
+    }
+    .edit-btn:hover { background: linear-gradient(135deg, #1976D2 0%, #1565C0 100%); }
+    .delete-btn {
+      background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+      color: white;
+    }
+    .delete-btn:hover { background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%); }
+    .user-card, .unit-card {
+      background: rgba(255,255,255,0.7);
+      border-radius: 15px;
+      padding: 25px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(211,47,47,0.2);
+      transition: all 0.3s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .user-card:hover, .unit-card:hover {
+      transform: translateX(-5px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    .user-info, .unit-info {
+      display: flex;
+      align-items: center;
+      flex: 1;
+    }
+    .user-info i, .unit-info i {
+      font-size: 40px;
+      color: #D32F2F;
+      margin-left: 20px;
+    }
+    .user-info div, .unit-info div {
+      margin-left: 20px;
+    }
+    .user-info strong { font-size: 18px; color: #333; display: block; }
+    .user-info small { color: #666; font-size: 14px; }
+    .unit-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .unit-actions button {
+      flex: 1;
+      min-width: 100px;
+    }
+    #editModal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal {
+      background: white;
+      padding: 40px;
+      border-radius: 25px;
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      animation: modalSlide 0.3s ease;
+    }
+    @keyframes modalSlide {
+      from { opacity: 0; transform: scale(0.8) translateY(-50px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .modal h2 {
+      color: #D32F2F;
+      margin-bottom: 25px;
+      font-size: 24px;
+    }
+    .modal input {
+      margin-bottom: 25px;
+    }
+    .modal .add-btn {
+      margin-left: 15px;
+      width: 45%;
+      min-width: 120px;
+    }
+    .modal button:nth-child(2) {
+      background: #95a5a6;
+      width: 45%;
+      min-width: 120px;
+    }
+    .loading {
+      text-align: center;
+      color: #666;
+      font-style: italic;
+      padding: 40px;
+    }
+    .empty {
+      text-align: center;
+      color: #999;
+      font-style: italic;
+      padding: 40px;
+      font-size: 18px;
+    }
+    @media (max-width: 480px) {
+      .boxes-container { grid-template-columns: 1fr; gap: 20px; }
+      .content { padding: 25px 20px; }
+      .user-card, .unit-card { flex-direction: column; text-align: center; gap: 15px; }
+      .unit-actions { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <i class="fas fa-graduation-cap"></i> لوحة المدرس
+    </div>
+    <div class="sidebar-menu">
+      <a href="index.html" class="menu-item active">
+        <i class="fas fa-chalkboard-teacher menu-icon"></i>
+        لوحة المدرس
+      </a>
+      <a href="student.html" class="menu-item">
+        <i class="fas fa-user-graduate menu-icon"></i>
+        صفحة الطالب
+      </a>
+      <a href="cards.html" class="menu-item">
+        <i class="fas fa-cards menu-icon"></i>
+        البطاقات
+      </a>
+      <a href="#" class="menu-item" onclick="signOutUser(); return false;">
+        <i class="fas fa-sign-out-alt menu-icon"></i>
+        خروج
+      </a>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <a href="index.html" class="active">
+      <span class="nav-icon">👨‍🏫</span> لوحة المدرس
+    </a>
+    <a href="student.html">
+      <span class="nav-icon">👨‍🎓</span> الطالب
+    </a>
+    <a href="cards.html">
+      <span class="nav-icon">🃏</span> البطاقات
+    </a>
+  </div>
+
+  <div class="main-content">
+    <h1 class="page-title">لوحة تحكم المدرس <i class="fas fa-crown"></i></h1>
+    
+    <div class="boxes-container">
+      <div class="box">
+        <div class="header">
+          <i class="fas fa-plus-circle"></i> إضافة بطاقة جديدة
+        </div>
+        <div class="content">
+          <div class="input-group">
+            <label><i class="fas fa-book"></i> اسم الوحدة</label>
+            <input id="unitName" placeholder="مثال: Unit 1 - Greetings" type="text">
+          </div>
+          <div class="input-group">
+            <label><i class="fas fa-font"></i> الكلمة بالعربي</label>
+            <input id="arabic" placeholder="مثال: مرحبا" type="text">
+          </div>
+          <div class="input-group">
+            <label><i class="fas fa-globe"></i> الكلمة بالإنجليزي</label>
+            <input id="english" placeholder="مثال: Hello" type="text">
+          </div>
+          <div class="input-group">
+            <label><i class="fas fa-microphone"></i> ملف الصوت</label>
+            <input type="file" id="audio" accept="audio/*">
+          </div>
+          <button class="add-btn" onclick="addCard()">
+            <i class="fas fa-plus"></i> ➕ إضافة البطاقة
+          </button>
+        </div>
+      </div>
+
+      <div class="box">
+        <div class="header">
+          <i class="fas fa-users"></i> المستخدمين
+        </div>
+        <div class="content" id="usersList">جاري التحميل...</div>
+      </div>
+
+      <div class="box">
+        <div class="header">
+          <i class="fas fa-book-open"></i> الوحدات
+        </div>
+        <div class="content" id="unitsList">جاري التحميل...</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="editModal">
+    <div class="modal">
+      <h2><i class="fas fa-edit"></i> تعديل اسم الوحدة</h2>
+      <input id="editUnitName" placeholder="اسم الوحدة الجديد" type="text">
+      <div>
+        <button class="add-btn" onclick="saveUnitEdit()">
+          <i class="fas fa-save"></i> حفظ التعديل
+        </button>
+        <button onclick="editModal.style.display='none'" style="background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);">
+          <i class="fas fa-times"></i> إلغاء
+        </button>
+      </div>
+    </div>
+  </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-    import { getFirestore, collection, getDocs, doc, getDoc, deleteDoc, updateDoc, addDoc, arrayUnion, query, where } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+    import {
+      getFirestore, collection, getDocs, doc, deleteDoc,
+      updateDoc, addDoc, arrayUnion, query, where
+    } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyA9WXBcRf8QBsRAafAcnKYVFx_kF5B0Gr0",
@@ -24,423 +466,178 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
-
     let audioBase64 = "";
     let currentEditingUnitId = null;
+    const adminEmails = ["mo2652008@gmail.com"];
 
-    // حدد هنا إيميلك (أو إيميلات الأدمن)
-    const adminEmails = [
-      "mo2652008@gmail.com",  // ← غيّر ده لإيميلك الحقيقي
-    ];
+    // DOM Elements
+    const editModal = document.getElementById('editModal');
+    const unitName = document.getElementById('unitName');
+    const arabic = document.getElementById('arabic');
+    const english = document.getElementById('english');
+    const audio = document.getElementById('audio');
+    const editUnitName = document.getElementById('editUnitName');
 
-    onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        window.location.href = "login.html";
-        return;
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) return location.href = "login.html";
+      if (!adminEmails.includes(user.email.toLowerCase())) {
+        alert("🚫 غير مصرح لك الدخول هنا");
+        return location.href = "student.html";
       }
 
-      const userEmail = user.email.toLowerCase();
-      if (!adminEmails.includes(userEmail)) {
-        alert("غير مصرح لك بالدخول إلى هذه الصفحة");
-        window.location.href = "student.html";
-        return;
-      }
+      // الترحيب الجديد: مرحباً يا [الاسم] أو مرحباً بك لو مفيش اسم
+      const welcomeText = user.displayName 
+        ? `مرحباً يا ${user.displayName} 👋` 
+        : `مرحباً بك 👋`;
 
-      localStorage.setItem("userId", user.uid);
-      loadAdminContent();
-    });
+      document.querySelector('.page-title').innerHTML += `
+        <br>
+        <small style="font-size:15px; color:#444; font-weight:500;">
+          ${welcomeText}
+        </small>`;
 
-    async function loadAdminContent() {
-      document.getElementById("adminSection").style.display = "block";
       await loadUsers();
       await loadUnits();
-    }
+    });
 
     async function loadUsers() {
-      const container = document.getElementById("usersList");
-      container.innerHTML = "<p>جاري تحميل المستخدمين...</p>";
-
+      const box = document.getElementById("usersList");
+      box.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</div>';
       try {
-        const querySnapshot = await getDocs(collection(db, "users"));
-        container.innerHTML = "";
-
-        if (querySnapshot.empty) {
-          container.innerHTML = "<p>لا يوجد مستخدمين حتى الآن</p>";
-          return;
-        }
-
-        querySnapshot.forEach((docSnap) => {
-          const userData = docSnap.data();
-          const userId = docSnap.id;
-
-          const div = document.createElement("div");
-          div.className = "user-card";
-          div.innerHTML = `
-            <div style="padding: 15px; border-bottom: 1px solid #eee;">
-              <strong>${userData.displayName || "غير مسمى"}</strong> 
-              <small>(${userData.email})</small><br>
-              <small>دور: ${userData.role || "طالب"}</small><br>
-              <small>إحصائيات: دقة متوسطة ${userData.stats?.totalAccuracy || 0}% - وحدات مكتملة ${userData.stats?.completedUnits || 0}</small>
-              <button class="delete-btn" onclick="deleteUser('${userId}')">حذف الحساب</button>
-            </div>
-          `;
-          container.appendChild(div);
+        const snap = await getDocs(collection(db, "users"));
+        box.innerHTML = snap.empty ? '<div class="empty">لا يوجد مستخدمين حاليًا</div>' : "";
+        snap.forEach(d => {
+          const u = d.data();
+          box.innerHTML += `
+            <div class="user-card">
+              <div class="user-info">
+                <i class="fas fa-user-circle fa-3x"></i>
+                <div>
+                  <strong>${u.displayName || "غير مسمى"}</strong>
+                  <small>${u.email}</small>
+                </div>
+              </div>
+              <button class="delete-btn" onclick="deleteUser('${d.id}')">
+                <i class="fas fa-trash"></i> حذف
+              </button>
+            </div>`;
         });
-      } catch (error) {
-        console.error("Error loading users:", error);
-        container.innerHTML = "<p>حدث خطأ أثناء تحميل المستخدمين</p>";
+      } catch(e) {
+        box.innerHTML = '<div class="empty">خطأ في التحميل</div>';
       }
     }
 
-    async function loadUnits() {
-      const container = document.getElementById("unitsList");
-      container.innerHTML = "<p>جاري تحميل الوحدات...</p>";
-
-      try {
-        const querySnapshot = await getDocs(collection(db, "units"));
-        container.innerHTML = "";
-
-        if (querySnapshot.empty) {
-          container.innerHTML = "<p>لا توجد وحدات مضافة</p>";
-          return;
-        }
-
-        querySnapshot.forEach((docSnap) => {
-          const unit = docSnap.data();
-          const unitId = docSnap.id;
-
-          const div = document.createElement("div");
-          div.className = "unit-card";
-          div.innerHTML = `
-            <div style="padding: 15px;">
-              <strong>${unit.unitName || "وحدة غير مسماة"}</strong><br>
-              <small>عدد الكروت: ${unit.cards?.length || 0}</small>
-              <button class="edit-btn" onclick="openEditUnitModal('${unitId}', '${unit.unitName || ''}')">تعديل</button>
-              <button class="delete-btn" onclick="deleteUnit('${unitId}')">حذف</button>
-            </div>
-          `;
-          container.appendChild(div);
-        });
-      } catch (error) {
-        console.error("Error loading units:", error);
-        container.innerHTML = "<p>حدث خطأ أثناء تحميل الوحدات</p>";
+    window.deleteUser = async (id) => {
+      if (confirm("🗑️ هل أنت متأكد من حذف هذا المستخدم؟")) {
+        await deleteDoc(doc(db, "users", id));
+        loadUsers();
       }
-    }
-
-    function openEditUnitModal(unitId, currentName) {
-      currentEditingUnitId = unitId;
-      document.getElementById("editUnitName").value = currentName;
-      document.getElementById("editModal").style.display = "block";
-    }
-
-    async function saveUnitEdit() {
-      const newName = document.getElementById("editUnitName").value.trim();
-      if (!newName) return alert("اكتب اسم الوحدة");
-
-      try {
-        await updateDoc(doc(db, "units", currentEditingUnitId), {
-          unitName: newName
-        });
-        alert("تم تعديل اسم الوحدة");
-        document.getElementById("editModal").style.display = "none";
-        loadUnits();
-      } catch (error) {
-        alert("خطأ في التعديل: " + error.message);
-      }
-    }
-
-    async function deleteUnit(unitId) {
-      if (confirm("متأكد من حذف الوحدة دي؟")) {
-        try {
-          await deleteDoc(doc(db, "units", unitId));
-          alert("تم حذف الوحدة");
-          loadUnits();
-        } catch (error) {
-          alert("خطأ في الحذف: " + error.message);
-        }
-      }
-    }
-
-    async function deleteUser(userId) {
-      if (confirm("متأكد من حذف الحساب ده؟")) {
-        try {
-          await deleteDoc(doc(db, "users", userId));
-          alert("تم حذف الحساب");
-          loadUsers();
-        } catch (error) {
-          alert("خطأ في الحذف: " + error.message);
-        }
-      }
-    }
-
-    document.getElementById("audio").onchange = function(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => audioBase64 = reader.result;
-      reader.readAsDataURL(file);
     };
 
-    async function addCard() {
-      const unitName = document.getElementById("unitName").value.trim();
-      const arabic = document.getElementById("arabic").value.trim();
-      const english = document.getElementById("english").value.trim();
-
-      if (!unitName || !arabic || !english || !audioBase64) {
-        alert("⚠️ كمل كل البيانات");
-        return;
-      }
-
+    async function loadUnits() {
+      const box = document.getElementById("unitsList");
+      box.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</div>';
       try {
-        const q = query(collection(db, "units"), where("unitName", "==", unitName));
-        const querySnapshot = await getDocs(q);
-
-        const newCard = {
-          arabic,
-          english,
-          audio: audioBase64,
-          results: {}
-        };
-
-        if (!querySnapshot.empty) {
-          const unitDoc = querySnapshot.docs[0];
-          await updateDoc(doc(db, "units", unitDoc.id), {
-            cards: arrayUnion(newCard)
-          });
-        } else {
-          await addDoc(collection(db, "units"), {
-            unitName,
-            cards: [newCard]
-          });
-        }
-
-        alert("✅ تم إضافة البطاقة بنجاح!");
-        document.getElementById("unitName").value = "";
-        document.getElementById("arabic").value = "";
-        document.getElementById("english").value = "";
-        document.getElementById("audio").value = "";
-        audioBase64 = "";
-      } catch (error) {
-        console.error("Error adding card: ", error);
-        alert("حدث خطأ أثناء الحفظ");
+        const snap = await getDocs(collection(db, "units"));
+        box.innerHTML = snap.empty ? '<div class="empty">لا توجد وحدات مضافة</div>' : "";
+        snap.forEach(d => {
+          const u = d.data();
+          box.innerHTML += `
+            <div class="unit-card">
+              <div class="unit-info">
+                <i class="fas fa-book fa-3x"></i>
+                <strong>${u.unitName}</strong>
+                <small>عدد الكروت: ${u.cards?.length || 0}</small>
+              </div>
+              <div class="unit-actions">
+                <button class="edit-btn" onclick="openEditUnitModal('${d.id}','${u.unitName.replace(/'/g, "\\'")}')">
+                  <i class="fas fa-edit"></i> تعديل
+                </button>
+                <button class="delete-btn" onclick="deleteUnit('${d.id}')">
+                  <i class="fas fa-trash"></i> حذف
+                </button>
+              </div>
+            </div>`;
+        });
+      } catch(e) {
+        box.innerHTML = '<div class="empty">خطأ في التحميل</div>';
       }
     }
+
+    window.openEditUnitModal = (id, name) => {
+      currentEditingUnitId = id;
+      editUnitName.value = name;
+      editModal.style.display = "flex";
+    };
+
+    window.saveUnitEdit = async () => {
+      if (!editUnitName.value.trim()) return alert("❌ اكتب اسم الوحدة أولاً");
+      try {
+        await updateDoc(doc(db, "units", currentEditingUnitId), {
+          unitName: editUnitName.value.trim()
+        });
+        editModal.style.display = "none";
+        editUnitName.value = "";
+        loadUnits();
+        alert("✅ تم حفظ التعديل بنجاح!");
+      } catch(e) {
+        alert("❌ خطأ في الحفظ");
+      }
+    };
+
+    window.deleteUnit = async (id) => {
+      if (confirm("🗑️ هل أنت متأكد من حذف هذه الوحدة؟")) {
+        await deleteDoc(doc(db, "units", id));
+        loadUnits();
+      }
+    };
+
+    audio.addEventListener("change", (e) => {
+      const reader = new FileReader();
+      reader.onload = () => audioBase64 = reader.result;
+      if (e.target.files[0]) reader.readAsDataURL(e.target.files[0]);
+    });
+
+    window.addCard = async () => {
+      if (!unitName.value.trim() || !arabic.value.trim() || !english.value.trim() || !audioBase64) {
+        return alert("❌ كمل كل البيانات المطلوبة");
+      }
+      try {
+        const q = query(collection(db, "units"), where("unitName", "==", unitName.value.trim()));
+        const snap = await getDocs(q);
+        const card = { 
+          arabic: arabic.value.trim(), 
+          english: english.value.trim(), 
+          audio: audioBase64 
+        };
+        
+        if (!snap.empty) {
+          await updateDoc(doc(db, "units", snap.docs[0].id), { 
+            cards: arrayUnion(card) 
+          });
+        } else {
+          await addDoc(collection(db, "units"), { 
+            unitName: unitName.value.trim(), 
+            cards: [card] 
+          });
+        }
+        alert("🎉 تمت الإضافة بنجاح!");
+        unitName.value = arabic.value = english.value = "";
+        audio.value = "";
+        audioBase64 = "";
+      } catch(e) {
+        alert("❌ خطأ في الإضافة");
+      }
+    };
 
     window.signOutUser = async () => {
       await signOut(auth);
-      localStorage.removeItem("userId");
-      window.location.href = "login.html";
+      location.href = "login.html";
     };
+
+    editModal.addEventListener('click', (e) => {
+      if (e.target === editModal) editModal.style.display = 'none';
+    });
   </script>
-
-  <style>
-    body {
-      font-family: 'Tajawal', sans-serif;
-      background: #f5f5f5;
-      margin: 0;
-      padding: 0;
-      min-height: 100vh;
-      display: flex;
-    }
-    .sidebar {
-      width: 280px;
-      background: white;
-      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
-      position: fixed;
-      top: 0;
-      bottom: 0;
-      right: 0;
-      overflow-y: auto;
-      z-index: 100;
-    }
-    .sidebar-header {
-      background: #D32F2F;
-      color: white;
-      padding: 30px 20px;
-      text-align: center;
-      font-size: 22px;
-      font-weight: 700;
-    }
-    .sidebar-menu {
-      padding: 20px 0;
-    }
-    .menu-item {
-      display: flex;
-      align-items: center;
-      padding: 18px 30px;
-      color: #555;
-      text-decoration: none;
-      font-size: 18px;
-      transition: all 0.3s;
-    }
-    .menu-item:hover {
-      background: #f0f0f0;
-      color: #D32F2F;
-    }
-    .menu-item.active {
-      background: #D32F2F;
-      color: white;
-      font-weight: 700;
-    }
-    .menu-icon {
-      font-size: 28px;
-      margin-left: 16px;
-    }
-    .main-content {
-      flex: 1;
-      padding: 30px;
-      margin-right: 280px;
-      box-sizing: border-box;
-    }
-    .box, .admin-section {
-      background: white;
-      border-radius: 20px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-      padding: 20px;
-      margin-bottom: 30px;
-    }
-    .header {
-      background: #D32F2F;
-      color: white;
-      padding: 15px;
-      text-align: center;
-      font-size: 20px;
-      font-weight: 700;
-      border-radius: 10px 10px 0 0;
-    }
-    .content {
-      padding: 20px;
-    }
-    .input-group {
-      margin-bottom: 16px;
-    }
-    label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: 500;
-    }
-    input[type="text"], input[type="file"] {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      font-size: 16px;
-    }
-    button {
-      padding: 12px 20px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: bold;
-      margin: 5px 0;
-    }
-    .add-btn { background: #27ae60; color: white; }
-    .edit-btn { background: #3498db; color: white; }
-    .delete-btn { background: #e74c3c; color: white; }
-    .user-card, .unit-card {
-      background: #f9f9f9;
-      border-radius: 12px;
-      padding: 15px;
-      margin-bottom: 15px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    }
-    #editModal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.5);
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-    .modal-content {
-      background: white;
-      padding: 30px;
-      border-radius: 12px;
-      width: 90%;
-      max-width: 400px;
-      text-align: center;
-    }
-    @media (max-width: 768px) {
-      .sidebar { display: none; }
-      .main-content { margin-right: 0; padding: 20px; }
-      body { flex-direction: column; }
-    }
-  </style>
-</head>
-<body>
-
-  <div class="sidebar">
-    <div class="sidebar-header">📚 لوحة التحكم</div>
-    <div class="sidebar-menu">
-      <a href="index.html" class="menu-item active">
-        <span class="menu-icon">👨‍🏫</span>
-        لوحة المدرس
-      </a>
-      <a href="student.html" class="menu-item">
-        <span class="menu-icon">👨‍🎓</span>
-        صفحة الطالب
-      </a>
-      <a href="cards.html" class="menu-item">
-        <span class="menu-icon">🃏</span>
-        عرض البطاقات
-      </a>
-      <a href="#" onclick="signOutUser(); return false;" class="menu-item">
-        <span class="menu-icon">🚪</span>
-        خروج
-      </a>
-    </div>
-  </div>
-
-  <div class="main-content">
-    <h1 class="page-title">👨‍🏫 لوحة المدرس</h1>
-
-    <div class="box">
-      <div class="header">
-        إضافة بطاقة جديدة
-      </div>
-      <div class="content">
-        <div class="input-group">
-          <label>اسم الـ Unit</label>
-          <input type="text" id="unitName" placeholder="مثال: Unit 1 - Greetings">
-        </div>
-        <div class="input-group">
-          <label>الكلمة بالعربي</label>
-          <input type="text" id="arabic" placeholder="مثال: مرحبا">
-        </div>
-        <div class="input-group">
-          <label>الكلمة بالإنجليزي</label>
-          <input type="text" id="english" placeholder="مثال: Hello">
-        </div>
-        <div class="input-group">
-          <label>ملف الصوت</label>
-          <input type="file" id="audio" accept="audio/*">
-        </div>
-        <button class="add-btn" onclick="addCard()">➕ إضافة البطاقة</button>
-      </div>
-    </div>
-
-    <div class="admin-section" id="adminSection">
-      <h2>المستخدمين</h2>
-      <div id="usersList">جاري التحميل...</div>
-
-      <h2 style="margin-top: 40px;">الوحدات المضافة</h2>
-      <div id="unitsList">جاري التحميل...</div>
-    </div>
-
-    <!-- Modal لتعديل اسم الوحدة -->
-    <div id="editModal">
-      <div class="modal-content">
-        <h2>تعديل اسم الوحدة</h2>
-        <input type="text" id="editUnitName" placeholder="اسم الوحدة الجديد" style="width: 100%; padding: 12px; margin: 15px 0; border-radius: 8px; border: 1px solid #ddd;">
-        <button class="add-btn" onclick="saveUnitEdit()">حفظ التعديل</button>
-        <button style="background: #95a5a6; color: white; margin-top: 10px;" onclick="document.getElementById('editModal').style.display='none'">إلغاء</button>
-      </div>
-    </div>
-  </div>
-
 </body>
 </html>
