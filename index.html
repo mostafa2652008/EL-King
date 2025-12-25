@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>لوحة المدرس</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
@@ -166,21 +168,6 @@
       position: relative;
       overflow: hidden;
     }
-    .header::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      right: -50%;
-      width: 100%;
-      height: 200%;
-      background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
-      transform: rotate(45deg);
-      animation: shine 3s infinite;
-    }
-    @keyframes shine {
-      0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-      100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
-    }
     .content {
       padding: 35px;
       min-height: 200px;
@@ -293,14 +280,17 @@
       z-index: 2000;
       align-items: center;
       justify-content: center;
+      overflow-y: auto;
+      padding: 20px;
     }
     .modal {
       background: white;
       padding: 40px;
       border-radius: 25px;
-      max-width: 500px;
+      max-width: 700px;
       width: 90%;
-      text-align: center;
+      max-height: 90vh;
+      overflow-y: auto;
       box-shadow: 0 20px 60px rgba(0,0,0,0.3);
       animation: modalSlide 0.3s ease;
     }
@@ -312,19 +302,82 @@
       color: #D32F2F;
       margin-bottom: 25px;
       font-size: 24px;
+      text-align: center;
     }
     .modal input {
-      margin-bottom: 25px;
+      margin-bottom: 20px;
     }
-    .modal .add-btn {
-      margin-left: 15px;
-      width: 45%;
-      min-width: 120px;
+    .modal-buttons {
+      display: flex;
+      gap: 15px;
+      margin-top: 30px;
+      justify-content: center;
     }
-    .modal button:nth-child(2) {
-      background: #95a5a6;
-      width: 45%;
-      min-width: 120px;
+    .modal-buttons button {
+      flex: 1;
+      max-width: 200px;
+    }
+    .card-item {
+      background: rgba(245, 247, 250, 0.8);
+      border: 2px solid #e0e0e0;
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 20px;
+      position: relative;
+    }
+    .card-item h4 {
+      color: #D32F2F;
+      margin-bottom: 15px;
+      font-size: 18px;
+      text-align: center;
+    }
+    .card-item input {
+      margin-bottom: 15px;
+    }
+    .card-item .delete-card-btn {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      background: #f44336;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 35px;
+      height: 35px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.3s;
+    }
+    .card-item .delete-card-btn:hover {
+      background: #d32f2f;
+      transform: scale(1.1);
+    }
+    .add-new-card-btn {
+      background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+      color: white;
+      border: none;
+      border-radius: 15px;
+      padding: 15px;
+      width: 100%;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-bottom: 20px;
+      transition: all 0.3s;
+      font-family: 'Tajawal', sans-serif;
+    }
+    .add-new-card-btn:hover {
+      transform: translateY(-2px);
+    }
+    .cards-section {
+      margin-top: 30px;
+      border-top: 2px solid #e0e0e0;
+      padding-top: 20px;
+    }
+    .cards-section h3 {
+      color: #333;
+      margin-bottom: 20px;
+      text-align: center;
     }
     .loading {
       text-align: center;
@@ -365,7 +418,7 @@
         <i class="fas fa-cards menu-icon"></i>
         البطاقات
       </a>
-      <a href="#" class="menu-item" onclick="signOutUser(); return false;">
+      <a href="#" class="menu-item" id="signOutBtn">
         <i class="fas fa-sign-out-alt menu-icon"></i>
         خروج
       </a>
@@ -409,7 +462,7 @@
             <label><i class="fas fa-microphone"></i> ملف الصوت</label>
             <input type="file" id="audio" accept="audio/*">
           </div>
-          <button class="add-btn" onclick="addCard()">
+          <button class="add-btn" id="addCardBtn">
             <i class="fas fa-plus"></i> ➕ إضافة البطاقة
           </button>
         </div>
@@ -433,13 +486,26 @@
 
   <div id="editModal">
     <div class="modal">
-      <h2><i class="fas fa-edit"></i> تعديل اسم الوحدة</h2>
-      <input id="editUnitName" placeholder="اسم الوحدة الجديد" type="text">
-      <div>
-        <button class="add-btn" onclick="saveUnitEdit()">
-          <i class="fas fa-save"></i> حفظ التعديل
+      <h2><i class="fas fa-edit"></i> تعديل الوحدة والبطاقات</h2>
+      
+      <div class="input-group">
+        <label><i class="fas fa-book"></i> اسم الوحدة</label>
+        <input id="editUnitName" placeholder="اسم الوحدة" type="text">
+      </div>
+
+      <div class="cards-section">
+        <h3><i class="fas fa-layer-group"></i> البطاقات الموجودة</h3>
+        <button class="add-new-card-btn" id="addNewCardInEdit">
+          <i class="fas fa-plus-circle"></i> إضافة بطاقة جديدة
         </button>
-        <button onclick="editModal.style.display='none'" style="background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);">
+        <div id="editCardsContainer"></div>
+      </div>
+
+      <div class="modal-buttons">
+        <button class="add-btn" id="saveEditBtn">
+          <i class="fas fa-save"></i> حفظ التعديلات
+        </button>
+        <button id="cancelEditBtn" style="background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%); padding: 18px; border: none; border-radius: 15px; font-size: 18px; font-weight: 700; cursor: pointer; transition: all 0.3s; font-family: 'Tajawal', sans-serif; display: flex; align-items: center; justify-content: center; gap: 10px; color: white;">
           <i class="fas fa-times"></i> إلغاء
         </button>
       </div>
@@ -454,30 +520,39 @@
       updateDoc, addDoc, arrayUnion, query, where
     } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
-    const firebaseConfig = {
+    const app = initializeApp({
       apiKey: "AIzaSyA9WXBcRf8QBsRAafAcnKYVFx_kF5B0Gr0",
       authDomain: "educate-a2aad.firebaseapp.com",
       projectId: "educate-a2aad",
       storageBucket: "educate-a2aad.firebasestorage.app",
       messagingSenderId: "237633521728",
       appId: "1:237633521728:web:1ec7e6aae3ae0711ef37a5"
-    };
+    });
 
-    const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
+    const adminEmails = ["mo2652008@gmail.com"];
+    
     let audioBase64 = "";
     let currentEditingUnitId = null;
-    const adminEmails = ["mo2652008@gmail.com"];
+    let currentEditingCards = [];
+    let editCardAudios = {}; // لحفظ الصوتيات الجديدة للبطاقات
 
-    // DOM Elements
-    const editModal = document.getElementById('editModal');
-    const unitName = document.getElementById('unitName');
-    const arabic = document.getElementById('arabic');
-    const english = document.getElementById('english');
-    const audio = document.getElementById('audio');
-    const editUnitName = document.getElementById('editUnitName');
+    // Cache DOM elements
+    const els = {
+      editModal: document.getElementById('editModal'),
+      unitName: document.getElementById('unitName'),
+      arabic: document.getElementById('arabic'),
+      english: document.getElementById('english'),
+      audio: document.getElementById('audio'),
+      editUnitName: document.getElementById('editUnitName'),
+      editCardsContainer: document.getElementById('editCardsContainer'),
+      usersList: document.getElementById('usersList'),
+      unitsList: document.getElementById('unitsList'),
+      pageTitle: document.querySelector('.page-title')
+    };
 
+    // Auth check
     onAuthStateChanged(auth, async (user) => {
       if (!user) return location.href = "login.html";
       if (!adminEmails.includes(user.email.toLowerCase())) {
@@ -485,30 +560,32 @@
         return location.href = "student.html";
       }
 
-      // الترحيب الجديد: مرحباً يا [الاسم] أو مرحباً بك لو مفيش اسم
       const welcomeText = user.displayName 
         ? `مرحباً يا ${user.displayName} 👋` 
         : `مرحباً بك 👋`;
 
-      document.querySelector('.page-title').innerHTML += `
+      els.pageTitle.innerHTML += `
         <br>
         <small style="font-size:15px; color:#444; font-weight:500;">
           ${welcomeText}
         </small>`;
 
-      await loadUsers();
-      await loadUnits();
+      // Load data in parallel
+      Promise.all([loadUsers(), loadUnits()]);
     });
 
     async function loadUsers() {
-      const box = document.getElementById("usersList");
-      box.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</div>';
+      els.usersList.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</div>';
       try {
         const snap = await getDocs(collection(db, "users"));
-        box.innerHTML = snap.empty ? '<div class="empty">لا يوجد مستخدمين حاليًا</div>' : "";
-        snap.forEach(d => {
+        if (snap.empty) {
+          els.usersList.innerHTML = '<div class="empty">لا يوجد مستخدمين حاليًا</div>';
+          return;
+        }
+        
+        const html = snap.docs.map(d => {
           const u = d.data();
-          box.innerHTML += `
+          return `
             <div class="user-card">
               <div class="user-info">
                 <i class="fas fa-user-circle fa-3x"></i>
@@ -517,99 +594,193 @@
                   <small>${u.email}</small>
                 </div>
               </div>
-              <button class="delete-btn" onclick="deleteUser('${d.id}')">
+              <button class="delete-btn" data-user-id="${d.id}">
                 <i class="fas fa-trash"></i> حذف
               </button>
             </div>`;
+        }).join('');
+        
+        els.usersList.innerHTML = html;
+        
+        // Add event listeners
+        els.usersList.querySelectorAll('.delete-btn').forEach(btn => {
+          btn.addEventListener('click', () => deleteUser(btn.dataset.userId));
         });
       } catch(e) {
-        box.innerHTML = '<div class="empty">خطأ في التحميل</div>';
+        els.usersList.innerHTML = '<div class="empty">خطأ في التحميل</div>';
       }
     }
 
-    window.deleteUser = async (id) => {
+    async function deleteUser(id) {
       if (confirm("🗑️ هل أنت متأكد من حذف هذا المستخدم؟")) {
         await deleteDoc(doc(db, "users", id));
         loadUsers();
       }
-    };
+    }
 
     async function loadUnits() {
-      const box = document.getElementById("unitsList");
-      box.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</div>';
+      els.unitsList.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</div>';
       try {
         const snap = await getDocs(collection(db, "units"));
-        box.innerHTML = snap.empty ? '<div class="empty">لا توجد وحدات مضافة</div>' : "";
-        snap.forEach(d => {
+        if (snap.empty) {
+          els.unitsList.innerHTML = '<div class="empty">لا توجد وحدات مضافة</div>';
+          return;
+        }
+        
+        const html = snap.docs.map(d => {
           const u = d.data();
-          box.innerHTML += `
+          return `
             <div class="unit-card">
               <div class="unit-info">
                 <i class="fas fa-book fa-3x"></i>
-                <strong>${u.unitName}</strong>
-                <small>عدد الكروت: ${u.cards?.length || 0}</small>
+                <div>
+                  <strong>${u.unitName}</strong>
+                  <small>عدد الكروت: ${u.cards?.length || 0}</small>
+                </div>
               </div>
               <div class="unit-actions">
-                <button class="edit-btn" onclick="openEditUnitModal('${d.id}','${u.unitName.replace(/'/g, "\\'")}')">
+                <button class="edit-btn" data-unit-id="${d.id}" data-unit-name="${u.unitName}">
                   <i class="fas fa-edit"></i> تعديل
                 </button>
-                <button class="delete-btn" onclick="deleteUnit('${d.id}')">
+                <button class="delete-btn" data-unit-id="${d.id}">
                   <i class="fas fa-trash"></i> حذف
                 </button>
               </div>
             </div>`;
+        }).join('');
+        
+        els.unitsList.innerHTML = html;
+        
+        // Add event listeners
+        els.unitsList.querySelectorAll('.edit-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            currentEditingUnitId = btn.dataset.unitId;
+            els.editUnitName.value = btn.dataset.unitName;
+            
+            // جلب بيانات الوحدة الكاملة
+            try {
+              const unitDoc = await doc(db, "units", btn.dataset.unitId);
+              const unitSnap = await getDocs(query(collection(db, "units"), where("__name__", "==", btn.dataset.unitId)));
+              
+              if (!unitSnap.empty) {
+                const unitData = unitSnap.docs[0].data();
+                currentEditingCards = unitData.cards || [];
+                renderEditCards();
+                els.editModal.style.display = "flex";
+              }
+            } catch (e) {
+              alert("❌ خطأ في تحميل البيانات");
+            }
+          });
+        });
+        
+        els.unitsList.querySelectorAll('.delete-btn').forEach(btn => {
+          btn.addEventListener('click', () => deleteUnit(btn.dataset.unitId));
         });
       } catch(e) {
-        box.innerHTML = '<div class="empty">خطأ في التحميل</div>';
+        els.unitsList.innerHTML = '<div class="empty">خطأ في التحميل</div>';
       }
     }
 
-    window.openEditUnitModal = (id, name) => {
-      currentEditingUnitId = id;
-      editUnitName.value = name;
-      editModal.style.display = "flex";
-    };
-
-    window.saveUnitEdit = async () => {
-      if (!editUnitName.value.trim()) return alert("❌ اكتب اسم الوحدة أولاً");
-      try {
-        await updateDoc(doc(db, "units", currentEditingUnitId), {
-          unitName: editUnitName.value.trim()
-        });
-        editModal.style.display = "none";
-        editUnitName.value = "";
-        loadUnits();
-        alert("✅ تم حفظ التعديل بنجاح!");
-      } catch(e) {
-        alert("❌ خطأ في الحفظ");
-      }
-    };
-
-    window.deleteUnit = async (id) => {
+    async function deleteUnit(id) {
       if (confirm("🗑️ هل أنت متأكد من حذف هذه الوحدة؟")) {
         await deleteDoc(doc(db, "units", id));
         loadUnits();
       }
+    }
+
+    // عرض البطاقات في نافذة التعديل
+    function renderEditCards() {
+      els.editCardsContainer.innerHTML = '';
+      editCardAudios = {};
+      
+      if (currentEditingCards.length === 0) {
+        els.editCardsContainer.innerHTML = '<div class="empty">لا توجد بطاقات في هذه الوحدة</div>';
+        return;
+      }
+
+      currentEditingCards.forEach((card, index) => {
+        const cardDiv = document.createElement('div');
+        cardDiv.className = 'card-item';
+        cardDiv.innerHTML = `
+          <button class="delete-card-btn" onclick="deleteCardFromEdit(${index})">
+            <i class="fas fa-times"></i>
+          </button>
+          <h4>بطاقة ${index + 1}</h4>
+          <div class="input-group">
+            <label><i class="fas fa-font"></i> الكلمة بالعربي</label>
+            <input type="text" class="edit-arabic" value="${card.arabic}" data-index="${index}">
+          </div>
+          <div class="input-group">
+            <label><i class="fas fa-globe"></i> الكلمة بالإنجليزي</label>
+            <input type="text" class="edit-english" value="${card.english}" data-index="${index}">
+          </div>
+          <div class="input-group">
+            <label><i class="fas fa-microphone"></i> ملف الصوت (اختياري - اتركه فارغاً للاحتفاظ بالصوت الحالي)</label>
+            <input type="file" class="edit-audio" accept="audio/*" data-index="${index}">
+          </div>
+        `;
+        els.editCardsContainer.appendChild(cardDiv);
+      });
+
+      // إضافة event listeners للملفات الصوتية
+      document.querySelectorAll('.edit-audio').forEach(input => {
+        input.addEventListener('change', (e) => {
+          const index = parseInt(e.target.dataset.index);
+          const file = e.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = () => {
+              editCardAudios[index] = reader.result;
+            };
+            reader.readAsDataURL(file);
+          }
+        });
+      });
+    }
+
+    // حذف بطاقة من التعديل
+    window.deleteCardFromEdit = (index) => {
+      if (confirm("🗑️ هل تريد حذف هذه البطاقة؟")) {
+        currentEditingCards.splice(index, 1);
+        renderEditCards();
+      }
     };
 
-    audio.addEventListener("change", (e) => {
-      const reader = new FileReader();
-      reader.onload = () => audioBase64 = reader.result;
-      if (e.target.files[0]) reader.readAsDataURL(e.target.files[0]);
+    // إضافة بطاقة جديدة في التعديل
+    document.getElementById('addNewCardInEdit').addEventListener('click', () => {
+      currentEditingCards.push({
+        arabic: '',
+        english: '',
+        audio: ''
+      });
+      renderEditCards();
     });
 
-    window.addCard = async () => {
-      if (!unitName.value.trim() || !arabic.value.trim() || !english.value.trim() || !audioBase64) {
+    // Audio file handler
+    els.audio.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = () => audioBase64 = reader.result;
+      reader.readAsDataURL(file);
+    });
+
+    // Add card
+    document.getElementById('addCardBtn').addEventListener('click', async () => {
+      const unit = els.unitName.value.trim();
+      const ar = els.arabic.value.trim();
+      const en = els.english.value.trim();
+      
+      if (!unit || !ar || !en || !audioBase64) {
         return alert("❌ كمل كل البيانات المطلوبة");
       }
+      
       try {
-        const q = query(collection(db, "units"), where("unitName", "==", unitName.value.trim()));
+        const q = query(collection(db, "units"), where("unitName", "==", unit));
         const snap = await getDocs(q);
-        const card = { 
-          arabic: arabic.value.trim(), 
-          english: english.value.trim(), 
-          audio: audioBase64 
-        };
+        const card = { arabic: ar, english: en, audio: audioBase64 };
         
         if (!snap.empty) {
           await updateDoc(doc(db, "units", snap.docs[0].id), { 
@@ -617,26 +788,97 @@
           });
         } else {
           await addDoc(collection(db, "units"), { 
-            unitName: unitName.value.trim(), 
+            unitName: unit, 
             cards: [card] 
           });
         }
+        
         alert("🎉 تمت الإضافة بنجاح!");
-        unitName.value = arabic.value = english.value = "";
-        audio.value = "";
+        els.unitName.value = els.arabic.value = els.english.value = "";
+        els.audio.value = "";
         audioBase64 = "";
+        loadUnits();
       } catch(e) {
         alert("❌ خطأ في الإضافة");
       }
-    };
+    });
 
-    window.signOutUser = async () => {
+    // Save unit edit
+    document.getElementById('saveEditBtn').addEventListener('click', async () => {
+      const newName = els.editUnitName.value.trim();
+      if (!newName) return alert("❌ اكتب اسم الوحدة أولاً");
+      
+      // جمع البيانات من الحقول
+      const updatedCards = [];
+      let hasError = false;
+
+      document.querySelectorAll('.card-item').forEach((cardDiv, index) => {
+        const arabic = cardDiv.querySelector('.edit-arabic').value.trim();
+        const english = cardDiv.querySelector('.edit-english').value.trim();
+        
+        if (!arabic || !english) {
+          hasError = true;
+          return;
+        }
+
+        // استخدام الصوت الجديد إذا تم رفعه، وإلا الاحتفاظ بالقديم
+        const audio = editCardAudios[index] || currentEditingCards[index]?.audio || '';
+        
+        if (!audio) {
+          hasError = true;
+          return;
+        }
+
+        updatedCards.push({ arabic, english, audio });
+      });
+
+      if (hasError) {
+        return alert("❌ يرجى ملء جميع حقول البطاقات وإضافة ملف صوت لكل بطاقة");
+      }
+
+      if (updatedCards.length === 0) {
+        return alert("❌ يجب أن يكون هناك بطاقة واحدة على الأقل");
+      }
+      
+      try {
+        await updateDoc(doc(db, "units", currentEditingUnitId), {
+          unitName: newName,
+          cards: updatedCards
+        });
+        
+        els.editModal.style.display = "none";
+        els.editUnitName.value = "";
+        currentEditingCards = [];
+        editCardAudios = {};
+        loadUnits();
+        alert("✅ تم حفظ التعديلات بنجاح!");
+      } catch(e) {
+        console.error(e);
+        alert("❌ خطأ في الحفظ");
+      }
+    });
+
+    // Cancel edit
+    document.getElementById('cancelEditBtn').addEventListener('click', () => {
+      els.editModal.style.display = 'none';
+      currentEditingCards = [];
+      editCardAudios = {};
+    });
+
+    // Close modal on background click
+    els.editModal.addEventListener('click', (e) => {
+      if (e.target === els.editModal) {
+        els.editModal.style.display = 'none';
+        currentEditingCards = [];
+        editCardAudios = {};
+      }
+    });
+
+    // Sign out
+    document.getElementById('signOutBtn').addEventListener('click', async (e) => {
+      e.preventDefault();
       await signOut(auth);
       location.href = "login.html";
-    };
-
-    editModal.addEventListener('click', (e) => {
-      if (e.target === editModal) editModal.style.display = 'none';
     });
   </script>
 </body>
