@@ -167,98 +167,121 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    let isLoginMode = true;
-    const mainBtn = document.getElementById("mainBtn");
-    const toggleText = document.getElementById("toggleText");
-    const nameGroup = document.getElementById("nameGroup");
-    const errorMsg = document.getElementById("errorMsg");
+  let isLoginMode = true;
+const mainBtn = document.getElementById("mainBtn");
+const toggleText = document.getElementById("toggleText");
+const nameGroup = document.getElementById("nameGroup");
+const errorMsg = document.getElementById("errorMsg");
 
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        // بعد تسجيل الدخول، نحمل الاسم من Firestore ونحفظه في localStorage
-        getDoc(doc(db, "users", user.uid))
-          .then((docSnap) => {
-            let displayName = "طالب";
-            if (docSnap.exists()) {
-              displayName = docSnap.data().displayName || "طالب";
-            }
-            localStorage.setItem("displayName", displayName);
-            window.location.href = "student.html";
-          })
-          .catch(() => {
-            localStorage.setItem("displayName", "طالب");
-            window.location.href = "student.html";
-          });
-      }
-    });
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    try {
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      const displayName = userDoc.exists() ? userDoc.data().displayName || "طالب" : "طالب";
+      localStorage.setItem("displayName", displayName);
+      window.location.href = "student.html";
+    } catch (e) {
+      console.error("خطأ في جلب الاسم:", e);
+      localStorage.setItem("displayName", "طالب");
+      window.location.href = "student.html";
+    }
+  }
+});
 
-    function toggleMode() {
-      isLoginMode = !isLoginMode;
-      if (isLoginMode) {
-        mainBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> تسجيل الدخول';
-        toggleText.textContent = "ليس لديك حساب؟ اضغط هنا";
-        nameGroup.style.display = "none";
-      } else {
-        mainBtn.innerHTML = '<i class="fas fa-user-plus"></i> إنشاء حساب';
-        toggleText.textContent = "لديك حساب؟ سجل دخولك";
-        nameGroup.style.display = "block";
-      }
-      errorMsg.textContent = "";
+function toggleMode() {
+  isLoginMode = !isLoginMode;
+  if (isLoginMode) {
+    mainBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> تسجيل الدخول';
+    toggleText.textContent = "ليس لديك حساب؟ اضغط هنا";
+    nameGroup.style.display = "none";
+  } else {
+    mainBtn.innerHTML = '<i class="fas fa-user-plus"></i> إنشاء حساب';
+    toggleText.textContent = "لديك حساب؟ سجل دخولك";
+    nameGroup.style.display = "block";
+  }
+  errorMsg.textContent = "";
+}
+
+window.handleSubmit = async () => {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+  const name = document.getElementById("name").value.trim();
+
+  errorMsg.textContent = "";
+
+  // التحقق من الحقول
+  if (!email || !password) {
+    errorMsg.textContent = "املأ الإيميل وكلمة المرور";
+    return;
+  }
+
+  if (!isLoginMode) {
+    if (!name) {
+      errorMsg.textContent = "الاسم مطلوب عند إنشاء حساب جديد";
+      return;
+    }
+    if (password.length < 6) {
+      errorMsg.textContent = "كلمة المرور لازم تكون 6 أحرف على الأقل";
+      return;
+    }
+  }
+
+  try {
+    let user;
+
+    if (isLoginMode) {
+      // تسجيل الدخول
+      const credential = await signInWithEmailAndPassword(auth, email, password);
+      user = credential.user;
+    } else {
+      // إنشاء حساب جديد
+      const credential = await createUserWithEmailAndPassword(auth, email, password);
+      user = credential.user;
+
+      // حفظ بيانات المستخدم في Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        displayName: name,
+        email: user.email,
+        role: "student",
+        createdAt: new Date().toISOString()
+      });
+
+      alert("تم إنشاء الحساب بنجاح! جاري توجيهك...");
     }
 
-    window.handleSubmit = async () => {
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value;
-      const name = document.getElementById("name").value.trim();
-      errorMsg.textContent = "";
+    // حفظ الاسم في localStorage (للاستخدام في الصفحات الأخرى)
+    localStorage.setItem("displayName", isLoginMode ? name || "طالب" : name);
 
-      if (!email || !password) {
-        errorMsg.textContent = "املأ الإيميل وكلمة المرور";
-        return;
-      }
+    // الانتقال لصفحة الطالب
+    window.location.href = "student.html";
+  } catch (error) {
+    console.error("خطأ في التسجيل:", error);
 
-      if (!isLoginMode && !name) {
-        errorMsg.textContent = "الاسم مطلوب";
-        return;
-      }
+    let msg = "حدث خطأ، جرب تاني";
+    switch (error.code) {
+      case "auth/email-already-in-use":
+        msg = "الإيميل مستخدم بالفعل";
+        break;
+      case "auth/invalid-email":
+        msg = "الإيميل غير صالح";
+        break;
+      case "auth/weak-password":
+        msg = "كلمة المرور ضعيفة جداً";
+        break;
+      case "auth/wrong-password":
+        msg = "كلمة المرور غير صحيحة";
+        break;
+      case "auth/user-not-found":
+        msg = "الإيميل غير مسجل";
+        break;
+      default:
+        msg = error.message;
+    }
 
-      if (!isLoginMode && password.length < 6) {
-        errorMsg.textContent = "كلمة المرور 6 أحرف على الأقل";
-        return;
-      }
-
-      try {
-        let user;
-        if (isLoginMode) {
-          const userCredential = await signInWithEmailAndPassword(auth, email, password);
-          user = userCredential.user;
-        } else {
-          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-          user = userCredential.user;
-
-          await setDoc(doc(db, "users", user.uid), {
-            displayName: name,
-            email: user.email,
-            role: "student",
-            createdAt: new Date().toISOString()
-          });
-        }
-
-        // حفظ الاسم في localStorage فوراً بعد الدخول الناجح
-        localStorage.setItem("displayName", isLoginMode ? (await getDoc(doc(db, "users", user.uid))).data()?.displayName || "طالب" : name);
-
-        window.location.href = "student.html";
-      } catch (error) {
-        let msg = "حدث خطأ";
-        if (error.code === "auth/wrong-password") msg = "كلمة المرور غير صحيحة";
-        else if (error.code === "auth/user-not-found") msg = "الإيميل غير مسجل";
-        else if (error.code === "auth/email-already-in-use") msg = "الإيميل مستخدم من قبل";
-        else if (error.code === "auth/invalid-email") msg = "الإيميل غير صالح";
-        else msg = error.message;
-
-        errorMsg.textContent = msg;
-      }
-    };
+    errorMsg.textContent = msg;
+  }
+};
   </script>
 </body>
 </html>
+
