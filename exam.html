@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الامتحان</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Tajawal', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .exam-header {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+    .exam-title {
+      font-size: 32px;
+      font-weight: 700;
+      color: #667eea;
+      margin-bottom: 15px;
+    }
+    .exam-info {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      flex-wrap: wrap;
+      color: #666;
+      font-size: 16px;
+    }
+    .timer-container {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 30px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: white;
+    }
+    .timer {
+      font-size: 36px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .timer-label {
+      font-size: 18px;
+      opacity: 0.9;
+    }
+    .progress-info {
+      text-align: left;
+    }
+    .progress-text {
+      font-size: 16px;
+      margin-bottom: 5px;
+    }
+    .question-card {
+      background: white;
+      border-radius: 20px;
+      padding: 35px;
+      margin-bottom: 25px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+      transition: all 0.3s;
+    }
+    .question-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 50px rgba(0,0,0,0.2);
+    }
+    .question-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 3px solid #f0f0f0;
+    }
+    .question-number {
+      font-size: 20px;
+      font-weight: 700;
+      color: #667eea;
+      background: #f0f0ff;
+      padding: 10px 20px;
+      border-radius: 15px;
+    }
+    .question-points {
+      font-size: 18px;
+      font-weight: 700;
+      color: #f5576c;
+      background: #fff0f0;
+      padding: 10px 20px;
+      border-radius: 15px;
+    }
+    .question-text {
+      font-size: 20px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 25px;
+      line-height: 1.6;
+    }
+    .choices {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .choice {
+      background: #f8f9fa;
+      border: 3px solid #e0e0e0;
+      border-radius: 15px;
+      padding: 20px 25px;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      font-size: 18px;
+    }
+    .choice:hover {
+      background: #f0f0ff;
+      border-color: #667eea;
+      transform: translateX(-5px);
+    }
+    .choice.selected {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-color: #667eea;
+      color: white;
+      font-weight: 600;
+    }
+    .choice-radio {
+      width: 25px;
+      height: 25px;
+      border: 3px solid #667eea;
+      border-radius: 50%;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .choice.selected .choice-radio::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 13px;
+      height: 13px;
+      background: white;
+      border-radius: 50%;
+    }
+    .submit-container {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+    .submit-btn {
+      background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+      color: white;
+      border: none;
+      border-radius: 15px;
+      padding: 20px 60px;
+      font-size: 22px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-family: 'Tajawal', sans-serif;
+      box-shadow: 0 5px 20px rgba(76,175,80,0.4);
+    }
+    .submit-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(76,175,80,0.5);
+    }
+    .submit-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    .warning-text {
+      color: #f5576c;
+      margin-bottom: 20px;
+      font-size: 16px;
+    }
+    .result-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .result-content {
+      background: white;
+      border-radius: 25px;
+      padding: 50px;
+      max-width: 600px;
+      width: 100%;
+      text-align: center;
+      animation: resultSlide 0.5s ease;
+    }
+    @keyframes resultSlide {
+      from { opacity: 0; transform: scale(0.8) translateY(-50px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .result-icon {
+      font-size: 80px;
+      margin-bottom: 20px;
+    }
+    .result-title {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: #333;
+    }
+    .result-score {
+      font-size: 48px;
+      font-weight: 700;
+      margin-bottom: 15px;
+    }
+    .result-percentage {
+      font-size: 36px;
+      font-weight: 700;
+      margin-bottom: 30px;
+    }
+    .result-message {
+      font-size: 20px;
+      color: #666;
+      margin-bottom: 30px;
+    }
+    .back-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 15px;
+      padding: 18px 50px;
+      font-size: 20px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-family: 'Tajawal', sans-serif;
+    }
+    .back-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(102,126,234,0.4);
+    }
+    .loading-screen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      color: white;
+      font-size: 24px;
+      gap: 15px;
+    }
+    .exam-list {
+      display: grid;
+      gap: 20px;
+      margin-top: 30px;
+    }
+    .exam-card {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+    .exam-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 50px rgba(0,0,0,0.2);
+    }
+    .exam-card-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #667eea;
+      margin-bottom: 15px;
+    }
+    .exam-card-info {
+      color: #666;
+      margin-bottom: 8px;
+      font-size: 16px;
+    }
+    .start-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 15px 40px;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-family: 'Tajawal', sans-serif;
+      margin-top: 15px;
+    }
+    .start-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(102,126,234,0.4);
+    }
+    @media (max-width: 768px) {
+      .exam-title { font-size: 24px; }
+      .timer { font-size: 28px; }
+      .question-card { padding: 25px; }
+      .question-text { font-size: 18px; }
+      .choice { padding: 15px 20px; font-size: 16px; }
+      .result-content { padding: 30px; }
+      .result-score { font-size: 36px; }
+      .result-percentage { font-size: 28px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="mainContainer">
+    <div class="loading-screen" id="loadingScreen">
+      <i class="fas fa-spinner fa-spin"></i>
+      جاري التحميل...
+    </div>
+  </div>
+
+  <div class="result-modal" id="resultModal">
+    <div class="result-content">
+      <div class="result-icon" id="resultIcon"></div>
+      <div class="result-title" id="resultTitle"></div>
+      <div class="result-score" id="resultScore"></div>
+      <div class="result-percentage" id="resultPercentage"></div>
+      <div class="result-message" id="resultMessage"></div>
+      <button class="back-btn" onclick="location.href='student.html'">
+        <i class="fas fa-arrow-right"></i> العودة للصفحة الرئيسية
+      </button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+    import {
+      getFirestore, collection, getDocs, addDoc, doc, getDoc,
+      query, where, Timestamp
+    } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+    const app = initializeApp({
+      apiKey: "AIzaSyA9WXBcRf8QBsRAafAcnKYVFx_kF5B0Gr0",
+      authDomain: "educate-a2aad.firebaseapp.com",
+      projectId: "educate-a2aad",
+      storageBucket: "educate-a2aad.firebasestorage.app",
+      messagingSenderId: "237633521728",
+      appId: "1:237633521728:web:1ec7e6aae3ae0711ef37a5"
+    });
+
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    
+    let currentUser = null;
+    let currentExam = null;
+    let userAnswers = {};
+    let timerInterval = null;
+    let remainingTime = 0;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const examId = urlParams.get('id');
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        location.href = "login.html";
+        return;
+      }
+      
+      currentUser = user;
+      
+      if (examId) {
+        await loadExam(examId);
+      } else {
+        await showExamsList();
+      }
+    });
+
+    async function showExamsList() {
+      const container = document.getElementById('mainContainer');
+      
+      try {
+        const examsSnap = await getDocs(collection(db, "exams"));
+        
+        if (examsSnap.empty) {
+          container.innerHTML = `
+            <div class="exam-header">
+              <div class="exam-title">لا توجد امتحانات متاحة</div>
+              <button class="back-btn" onclick="location.href='student.html'">
+                <i class="fas fa-arrow-right"></i> العودة
+              </button>
+            </div>
+          `;
+          return;
+        }
+
+        let html = `
+          <div class="exam-header">
+            <div class="exam-title">
+              <i class="fas fa-clipboard-list"></i> الامتحانات المتاحة
+            </div>
+          </div>
+          <div class="exam-list">
+        `;
+
+        examsSnap.forEach(d => {
+          const exam = d.data();
+          html += `
+            <div class="exam-card" onclick="location.href='exam.html?id=${d.id}'">
+              <div class="exam-card-title">${exam.title}</div>
+              <div class="exam-card-info">
+                <i class="fas fa-book"></i> الوحدة: ${exam.unit}
+              </div>
+              <div class="exam-card-info">
+                <i class="fas fa-question-circle"></i> عدد الأسئلة: ${exam.questions?.length || 0}
+              </div>
+              <div class="exam-card-info">
+                <i class="fas fa-star"></i> الدرجة الكلية: ${exam.totalPoints}
+              </div>
+              <div class="exam-card-info">
+                <i class="fas fa-clock"></i> المدة: ${exam.duration} دقيقة
+              </div>
+              ${exam.description ? `<div class="exam-card-info" style="margin-top: 10px;">${exam.description}</div>` : ''}
+              <button class="start-btn">
+                <i class="fas fa-play"></i> ابدأ الامتحان
+              </button>
+            </div>
+          `;
+        });
+
+        html += `
+          </div>
+          <div style="text-align: center; margin-top: 30px;">
+            <button class="back-btn" onclick="location.href='student.html'">
+              <i class="fas fa-arrow-right"></i> العودة للصفحة الرئيسية
+            </button>
+          </div>
+        `;
+
+        container.innerHTML = html;
+      } catch (e) {
+        console.error(e);
+        container.innerHTML = `
+          <div class="exam-header">
+            <div class="exam-title">خطأ في تحميل الامتحانات</div>
+          </div>
+        `;
+      }
+    }
+
+    async function loadExam(id) {
+      const container = document.getElementById('mainContainer');
+      
+      try {
+        const examDoc = await getDoc(doc(db, "exams", id));
+        
+        if (!examDoc.exists()) {
+          container.innerHTML = `
+            <div class="exam-header">
+              <div class="exam-title">الامتحان غير موجود</div>
+              <button class="back-btn" onclick="location.href='exam.html'">
+                <i class="fas fa-arrow-right"></i> العودة
+              </button>
+            </div>
+          `;
+          return;
+        }
+
+        currentExam = { id: examDoc.id, ...examDoc.data() };
+        remainingTime = currentExam.duration * 60;
+        
+        renderExam();
+        startTimer();
+      } catch (e) {
+        console.error(e);
+        container.innerHTML = `
+          <div class="exam-header">
+            <div class="exam-title">خطأ في تحميل الامتحان</div>
+          </div>
+        `;
+      }
+    }
+
+    function renderExam() {
+      const container = document.getElementById('mainContainer');
+      
+      let html = `
+        <div class="exam-header">
+          <div class="exam-title">${currentExam.title}</div>
+          <div class="exam-info">
+            <div><i class="fas fa-book"></i> ${currentExam.unit}</div>
+            <div><i class="fas fa-question-circle"></i> ${currentExam.questions.length} سؤال</div>
+            <div><i class="fas fa-star"></i> ${currentExam.totalPoints} درجة</div>
+          </div>
+        </div>
+
+        <div class="timer-container">
+          <div>
+            <div class="timer-label">الوقت المتبقي</div>
+            <div class="timer" id="timer">
+              <i class="fas fa-clock"></i>
+              <span id="timerText">00:00</span>
+            </div>
+          </div>
+          <div class="progress-info">
+            <div class="progress-text">التقدم</div>
+            <div class="progress-text" id="progressText">0 / ${currentExam.questions.length}</div>
+          </div>
+        </div>
+      `;
+
+      currentExam.questions.forEach((q, index) => {
+        html += `
+          <div class="question-card">
+            <div class="question-header">
+              <div class="question-number">
+                <i class="fas fa-question-circle"></i> السؤال ${index + 1}
+              </div>
+              <div class="question-points">
+                <i class="fas fa-star"></i> ${q.points} ${q.points === 1 ? 'درجة' : 'درجات'}
+              </div>
+            </div>
+            <div class="question-text">${q.question}</div>
+            <div class="choices">
+              ${q.choices.map((choice, i) => `
+                <div class="choice" data-question="${index}" data-choice="${i}">
+                  <div class="choice-radio"></div>
+                  <div>${choice}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      });
+
+      html += `
+        <div class="submit-container">
+          <div class="warning-text">
+            <i class="fas fa-exclamation-triangle"></i>
+            تأكد من الإجابة على جميع الأسئلة قبل التسليم
+          </div>
+          <button class="submit-btn" id="submitBtn" disabled>
+            <i class="fas fa-paper-plane"></i> تسليم الامتحان
+          </button>
+        </div>
+      `;
+
+      container.innerHTML = html;
+
+      // Add event listeners for choices
+      document.querySelectorAll('.choice').forEach(choice => {
+        choice.addEventListener('click', () => {
+          const questionIndex = parseInt(choice.dataset.question);
+          const choiceIndex = parseInt(choice.dataset.choice);
+          
+          // Remove selection from other choices in same question
+          document.querySelectorAll(`.choice[data-question="${questionIndex}"]`).forEach(c => {
+            c.classList.remove('selected');
+          });
+          
+          // Select this choice
+          choice.classList.add('selected');
+          userAnswers[questionIndex] = choiceIndex;
+          
+          updateProgress();
+        });
+      });
+
+      document.getElementById('submitBtn').addEventListener('click', submitExam);
+    }
+
+    function updateProgress() {
+      const answered = Object.keys(userAnswers).length;
+      const total = currentExam.questions.length;
+      
+      document.getElementById('progressText').textContent = `${answered} / ${total}`;
+      document.getElementById('submitBtn').disabled = answered !== total;
+    }
+
+    function startTimer() {
+      updateTimerDisplay();
+      
+      timerInterval = setInterval(() => {
+        remainingTime--;
+        updateTimerDisplay();
+        
+        if (remainingTime <= 0) {
+          clearInterval(timerInterval);
+          alert('⏰ انتهى الوقت! سيتم تسليم الامتحان تلقائياً');
+          submitExam();
+        }
+      }, 1000);
+    }
+
+    function updateTimerDisplay() {
+      const minutes = Math.floor(remainingTime / 60);
+      const seconds = remainingTime % 60;
+      const display = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      
+      const timerText = document.getElementById('timerText');
+      if (timerText) {
+        timerText.textContent = display;
+        
+        // Change color when time is running out
+        const timer = document.querySelector('.timer-container');
+        if (remainingTime < 60) {
+          timer.style.background = 'linear-gradient(135deg, #f5576c 0%, #c44569 100%)';
+        } else if (remainingTime < 300) {
+          timer.style.background = 'linear-gradient(135deg, #ffa726 0%, #fb8c00 100%)';
+        }
+      }
+    }
+
+    async function submitExam() {
+      if (Object.keys(userAnswers).length !== currentExam.questions.length) {
+        if (!confirm('⚠️ لم تجب على جميع الأسئلة. هل تريد التسليم رغم ذلك؟')) {
+          return;
+        }
+      }
+
+      clearInterval(timerInterval);
+
+      // Calculate score
+      let score = 0;
+      let correctCount = 0;
+      
+      currentExam.questions.forEach((q, index) => {
+        if (userAnswers[index] === q.correctAnswer) {
+          score += q.points;
+          correctCount++;
+        }
+      });
+
+      const percentage = (score / currentExam.totalPoints) * 100;
+
+      // Save result to database
+      try {
+        await addDoc(collection(db, "examResults"), {
+          examId: currentExam.id,
+          examTitle: currentExam.title,
+          studentId: currentUser.uid,
+          studentName: currentUser.displayName || currentUser.email,
+          studentEmail: currentUser.email,
+          score: score,
+          totalPoints: currentExam.totalPoints,
+          percentage: percentage,
+          correctAnswers: correctCount,
+          totalQuestions: currentExam.questions.length,
+          answers: userAnswers,
+          submittedAt: Timestamp.now()
+        });
+
+        showResult(score, percentage, correctCount);
+      } catch (e) {
+        console.error(e);
+        alert('❌ خطأ في حفظ النتيجة');
+      }
+    }
+
+    function showResult(score, percentage, correctCount) {
+      const modal = document.getElementById('resultModal');
+      const icon = document.getElementById('resultIcon');
+      const title = document.getElementById('resultTitle');
+      const scoreEl = document.getElementById('resultScore');
+      const percentageEl = document.getElementById('resultPercentage');
+      const message = document.getElementById('resultMessage');
+
+      // Determine result type
+      let resultType, emoji, titleText, messageText, color;
+      
+      if (percentage >= 90) {
+        resultType = 'excellent';
+        emoji = '🌟';
+        titleText = 'ممتاز!';
+        messageText = 'أداء رائع! استمر في التميز';
+        color = '#4CAF50';
+      } else if (percentage >= 75) {
+        resultType = 'good';
+        emoji = '👍';
+        titleText = 'جيد جداً!';
+        messageText = 'أداء جيد! يمكنك الأفضل';
+        color = '#2196F3';
+      } else if (percentage >= 50) {
+        resultType = 'average';
+        emoji = '📚';
+        titleText = 'جيد';
+        messageText = 'أداء مقبول، حاول المزيد من المذاكرة';
+        color = '#FF9800';
+      } else {
+        resultType = 'poor';
+        emoji = '💪';
+        titleText = 'يحتاج تحسين';
+        messageText = 'لا تستسلم! راجع المادة وحاول مرة أخرى';
+        color = '#f44336';
+      }
+
+      icon.textContent = emoji;
+      title.textContent = titleText;
+      title.style.color = color;
+      scoreEl.textContent = `${score} / ${currentExam.totalPoints}`;
+      scoreEl.style.color = color;
+      percentageEl.textContent = `${percentage.toFixed(1)}%`;
+      percentageEl.style.color = color;
+      message.textContent = `${messageText} • أجبت بشكل صحيح على ${correctCount} من ${currentExam.questions.length} سؤال`;
+
+      modal.style.display = 'flex';
+    }
+  </script>
+</body>
+</html>
