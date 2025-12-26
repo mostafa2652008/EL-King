@@ -245,34 +245,33 @@
 
 <div class="sidebar">
   <div class="sidebar-header">
-    <i class="fas fa-graduation-cap"></i> لوحة التحكم
+    <i class="fas fa-graduation-cap"></i> منصة التعليم
   </div>
   <div class="sidebar-menu">
-    <a href="index.html" class="menu-item">
-      <i class="fas fa-chalkboard-teacher menu-icon"></i>
-      لوحة المدرس
-    </a>
     <a href="student.html" class="menu-item active">
       <i class="fas fa-user-graduate menu-icon"></i>
       صفحة الطالب
+    </a>
+    <a href="exam.html" class="menu-item">
+      <i class="fas fa-clipboard-list menu-icon"></i>
+      الامتحانات
     </a>
     <a href="cards.html" class="menu-item">
       <i class="fas fa-cards menu-icon"></i>
       البطاقات
     </a>
-    <a href="#" onclick="signOutUser(); return false;" class="menu-item">
+    <a href="#" class="menu-item" id="signOutBtn">
       <i class="fas fa-sign-out-alt menu-icon"></i>
       خروج
     </a>
   </div>
 </div>
-
 <div class="bottom-nav">
-  <a href="index.html">
-    <span class="nav-icon">👨‍🏫</span> المدرس
-  </a>
   <a href="student.html" class="active">
     <span class="nav-icon">👨‍🎓</span> الطالب
+  </a>
+  <a href="exam.html">
+    <span class="nav-icon">📝</span> الامتحانات
   </a>
   <a href="cards.html">
     <span class="nav-icon">🃏</span> البطاقات
@@ -427,5 +426,3 @@ localStorage.setItem("displayName", displayName);
 </script>
 </body>
 </html>
-
-
