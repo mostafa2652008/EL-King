@@ -316,6 +316,14 @@
       transform: translateY(-2px);
       box-shadow: 0 5px 20px rgba(102,126,234,0.4);
     }
+    .completed-badge {
+      background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 15px;
+      margin-top: 20px;
+      text-align: center;
+    }
     @media (max-width: 768px) {
       .exam-title { font-size: 24px; }
       .timer { font-size: 28px; }
@@ -411,6 +419,19 @@
           return;
         }
 
+        // Get student's exam results
+        const resultsQuery = query(
+          collection(db, "examResults"),
+          where("studentId", "==", currentUser.uid)
+        );
+        const resultsSnap = await getDocs(resultsQuery);
+        const studentResults = {};
+        
+        resultsSnap.forEach(doc => {
+          const result = doc.data();
+          studentResults[result.examId] = result;
+        });
+
         let html = `
           <div class="exam-header">
             <div class="exam-title">
@@ -422,8 +443,10 @@
 
         examsSnap.forEach(d => {
           const exam = d.data();
+          const result = studentResults[d.id];
+          
           html += `
-            <div class="exam-card" onclick="location.href='exam.html?id=${d.id}'">
+            <div class="exam-card" ${!result ? `onclick="location.href='exam.html?id=${d.id}'"` : ''} style="${result ? 'cursor: default;' : ''}">
               <div class="exam-card-title">${exam.title}</div>
               <div class="exam-card-info">
                 <i class="fas fa-book"></i> الوحدة: ${exam.unit}
@@ -438,9 +461,27 @@
                 <i class="fas fa-clock"></i> المدة: ${exam.duration} دقيقة
               </div>
               ${exam.description ? `<div class="exam-card-info" style="margin-top: 10px;">${exam.description}</div>` : ''}
-              <button class="start-btn">
-                <i class="fas fa-play"></i> ابدأ الامتحان
-              </button>
+              
+              ${result ? `
+                <div class="completed-badge">
+                  <div style="font-size: 20px; font-weight: 700; margin-bottom: 10px;">
+                    <i class="fas fa-check-circle"></i> تم الامتحان
+                  </div>
+                  <div style="font-size: 32px; font-weight: 700; margin-bottom: 5px;">
+                    ${result.score} / ${result.totalPoints}
+                  </div>
+                  <div style="font-size: 24px; font-weight: 600;">
+                    ${result.percentage.toFixed(1)}%
+                  </div>
+                  <div style="font-size: 16px; margin-top: 10px; opacity: 0.9;">
+                    إجابات صحيحة: ${result.correctAnswers} من ${result.totalQuestions}
+                  </div>
+                </div>
+              ` : `
+                <button class="start-btn">
+                  <i class="fas fa-play"></i> ابدأ الامتحان
+                </button>
+              `}
             </div>
           `;
         });
@@ -477,6 +518,55 @@
               <div class="exam-title">الامتحان غير موجود</div>
               <button class="back-btn" onclick="location.href='exam.html'">
                 <i class="fas fa-arrow-right"></i> العودة
+              </button>
+            </div>
+          `;
+          return;
+        }
+
+        // Check if student already took this exam
+        const resultsQuery = query(
+          collection(db, "examResults"),
+          where("examId", "==", id),
+          where("studentId", "==", currentUser.uid)
+        );
+        const resultsSnap = await getDocs(resultsQuery);
+        
+        if (!resultsSnap.empty) {
+          const result = resultsSnap.docs[0].data();
+          container.innerHTML = `
+            <div class="exam-header">
+              <div class="exam-title">
+                <i class="fas fa-clipboard-check"></i> ${examDoc.data().title}
+              </div>
+              <div class="exam-info">
+                <div><i class="fas fa-book"></i> ${examDoc.data().unit}</div>
+              </div>
+            </div>
+            
+            <div style="background: white; border-radius: 20px; padding: 50px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.15);">
+              <div style="font-size: 80px; margin-bottom: 20px;">✅</div>
+              <div style="font-size: 32px; font-weight: 700; color: #4CAF50; margin-bottom: 20px;">
+                لقد امتحنت من قبل
+              </div>
+              <div style="font-size: 24px; color: #666; margin-bottom: 40px;">
+                نتيجتك في هذا الامتحان
+              </div>
+              
+              <div style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; padding: 40px; border-radius: 20px; margin-bottom: 30px;">
+                <div style="font-size: 48px; font-weight: 700; margin-bottom: 10px;">
+                  ${result.score} / ${result.totalPoints}
+                </div>
+                <div style="font-size: 36px; font-weight: 600; margin-bottom: 15px;">
+                  ${result.percentage.toFixed(1)}%
+                </div>
+                <div style="font-size: 18px; opacity: 0.9;">
+                  إجابات صحيحة: ${result.correctAnswers} من ${result.totalQuestions}
+                </div>
+              </div>
+              
+              <button class="back-btn" onclick="location.href='exam.html'">
+                <i class="fas fa-arrow-right"></i> العودة لقائمة الامتحانات
               </button>
             </div>
           `;
