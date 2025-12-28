@@ -734,13 +734,15 @@
       avgDiv.innerHTML = `متوسط الدقة: <strong>${avg}%</strong> (${count} من ${cards.length} بطاقة)`;
     }
 
-    window.signOutUser = async () => {
-      await signOut(auth);
-      localStorage.clear();
-      window.location.href = "login.html";
-    };
 
+  // Sign out
+    document.getElementById('signOutBtn').addEventListener('click', async (e) => {
+      e.preventDefault();
+      await signOut(auth);
+      location.href = "login.html";
+    });
     cardDiv.addEventListener("click", flipCard);
   </script>
 </body>
 </html>
+
