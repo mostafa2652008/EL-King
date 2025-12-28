@@ -414,11 +414,12 @@
     }
   }
 
-  window.signOutUser = async () => {
-    await signOut(auth);
-    localStorage.removeItem("userId");
-    window.location.href = "login.html";
-  };
+  // Sign out
+    document.getElementById('signOutBtn').addEventListener('click', async (e) => {
+      e.preventDefault();
+      await signOut(auth);
+      location.href = "login.html";
+    });
 const userDoc = await getDoc(doc(db, "users", user.uid));
 const displayName = userDoc.exists() ? userDoc.data().displayName || "طالب" : "طالب";
 document.getElementById("userName").textContent = `مرحباً يا ${displayName} 👋`;
@@ -426,3 +427,4 @@ localStorage.setItem("displayName", displayName);
 </script>
 </body>
 </html>
+
